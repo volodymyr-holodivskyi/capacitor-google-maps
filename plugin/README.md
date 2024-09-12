@@ -1209,6 +1209,7 @@ Controls for setting padding on the 'visible' region of the view.
 | **`latitude`**  | <code>number</code> |
 | **`longitude`** | <code>number</code> |
 | **`width`**     | <code>number</code> |
+| **`height`**    | <code>number</code> |
 | **`imagePath`** | <code>string</code> |
 
 

@@ -542,7 +542,7 @@ class CapacitorGoogleMap(
 
     }
 
-    fun addGroundOverlay(latitude: Double, longitude: Double, width: Float, imagePath: String) {
+    fun addGroundOverlay(latitude: Double, longitude: Double, width: Float, height: Float, imagePath: String) {
 		try {
 			googleMap ?: throw GoogleMapNotAvailable()
 
@@ -559,7 +559,7 @@ class CapacitorGoogleMap(
 					} else {
 						try {
 							val bitmapDescriptor = BitmapDescriptorFactory.fromBitmap(result.image)
-							val groundOverlayOptions = GroundOverlayOptions().image(bitmapDescriptor).position(position, width, 1080F)
+							val groundOverlayOptions = GroundOverlayOptions().image(bitmapDescriptor).position(position, width, height)
 							googleMap!!.addGroundOverlay(groundOverlayOptions)
 						} catch (e: java.lang.Exception) {
 							Log.e("CapacitorGoogleMaps", e.stackTraceToString())

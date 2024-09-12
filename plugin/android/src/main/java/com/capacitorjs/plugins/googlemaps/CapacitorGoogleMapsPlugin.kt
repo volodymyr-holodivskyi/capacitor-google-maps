@@ -1021,14 +1021,15 @@ class CapacitorGoogleMapsPlugin : Plugin(), OnMapsSdkInitializedCallback {
         val latitude = call.getDouble("latitude")
         val longitude = call.getDouble("longitude")
         val width = call.getFloat("width")
+        val height = call.getFloat("height")
         val imagePath = call.getString("imagePath")
 
         val map = maps[id]
         map ?: throw MapNotFoundError()
 
         CoroutineScope(Dispatchers.Main).launch {
-            if (latitude != null && longitude != null && width != null && imagePath != null) {
-                map.addGroundOverlay(latitude, longitude, width, imagePath)
+            if (latitude != null && longitude != null && width != null && height !== null && imagePath != null) {
+                map.addGroundOverlay(latitude, longitude, width, height, imagePath)
                 call.resolve()
             } else {
                 call.reject("")

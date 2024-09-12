@@ -173,6 +173,7 @@ export interface GroundOverlayArgs {
   latitude: number;
   longitude: number;
   width: number;
+  height: number;
   imagePath: string;
 }
 

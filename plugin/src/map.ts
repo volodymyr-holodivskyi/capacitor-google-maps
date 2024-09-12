@@ -586,6 +586,7 @@ export class GoogleMap {
       latitude: opts.latitude,
       longitude: opts.longitude,
       width: opts.width,
+      height: opts.height,
       imagePath: opts.imagePath
     })
   }
