@@ -21,7 +21,7 @@ import type {
   PolylineCallbackData,
 } from './definitions';
 import { LatLngBounds, MapType } from './definitions';
-import type { CreateMapArgs } from './implementation';
+import type { CreateMapArgs, GroundOverlayArgs } from './implementation';
 import { CapacitorGoogleMaps } from './implementation';
 
 export interface GoogleMapInterface {
@@ -85,6 +85,10 @@ export interface GoogleMapInterface {
   setOnMarkerDragEndListener(callback?: MapListenerCallback<MarkerClickCallbackData>): Promise<void>;
   setOnMyLocationButtonClickListener(callback?: MapListenerCallback<MyLocationButtonClickCallbackData>): Promise<void>;
   setOnMyLocationClickListener(callback?: MapListenerCallback<MapClickCallbackData>): Promise<void>;
+  setOnMapDoubleClickListener(callback?: MapListenerCallback<MapClickCallbackData>): Promise<void>;
+  setOnMapLoadedListener(callback?: MapListenerCallback<{id: string}>): Promise<void>;
+  takeSnapshot(): Promise<{snapshot: string | HTMLElement}>;
+  addGroundOverlay(groundOverlayOptions: GroundOverlayArgs): Promise<void>;
 }
 
 class MapCustomElement extends HTMLElement {
@@ -121,6 +125,7 @@ export class GoogleMap {
   private onClusterInfoWindowClickListener?: PluginListenerHandle;
   private onInfoWindowClickListener?: PluginListenerHandle;
   private onMapClickListener?: PluginListenerHandle;
+  private onMapLongClickListener?: PluginListenerHandle;
   private onPolylineClickListener?: PluginListenerHandle;
   private onMarkerClickListener?: PluginListenerHandle;
   private onPolygonClickListener?: PluginListenerHandle;
@@ -130,6 +135,8 @@ export class GoogleMap {
   private onMarkerDragEndListener?: PluginListenerHandle;
   private onMyLocationButtonClickListener?: PluginListenerHandle;
   private onMyLocationClickListener?: PluginListenerHandle;
+  private onMapDoubleClickListener?: PluginListenerHandle;
+  private onMapLoadedListener?: PluginListenerHandle;
 
   private constructor(id: string) {
     this.id = id;
@@ -567,6 +574,22 @@ export class GoogleMap {
     );
   }
 
+  async takeSnapshot(): Promise<{snapshot: string | HTMLElement}> {
+    return CapacitorGoogleMaps.takeSnapshot({
+      id: this.id
+    })
+  }
+
+  async addGroundOverlay(opts: GroundOverlayArgs): Promise<void> {
+    return CapacitorGoogleMaps.addGroundOverlay({
+      id: this.id,
+      latitude: opts.latitude,
+      longitude: opts.longitude,
+      width: opts.width,
+      imagePath: opts.imagePath
+    })
+  }
+
   async fitBounds(bounds: LatLngBounds, padding?: number): Promise<void> {
     return CapacitorGoogleMaps.fitBounds({
       id: this.id,
@@ -790,6 +813,43 @@ export class GoogleMap {
       this.onMapClickListener = await CapacitorGoogleMaps.addListener('onMapClick', this.generateCallback(callback));
     } else {
       this.onMapClickListener = undefined;
+    }
+  }
+
+  async setOnMapLongClickListener(callback?: MapListenerCallback<MapClickCallbackData>): Promise<void> {
+    if (this.onMapLongClickListener) {
+      this.onMapLongClickListener.remove();
+    }
+
+    if (callback) {
+      this.onMapLongClickListener = await CapacitorGoogleMaps.addListener('onMapLongClick', this.generateCallback(callback));
+    } else {
+      this.onMapLongClickListener = undefined;
+    }
+  }
+
+  async setOnMapDoubleClickListener(callback?: MapListenerCallback<MapClickCallbackData>): Promise<void> {
+    if (Capacitor.isNativePlatform()) throw new Error('Not suppoted on native.');
+    if (this.onMapDoubleClickListener) {
+      this.onMapDoubleClickListener.remove();
+    }
+
+    if (callback) {
+      this.onMapDoubleClickListener = await CapacitorGoogleMaps.addListener('onMapDoubleClick', this.generateCallback(callback));
+    } else {
+      this.onMapDoubleClickListener = undefined;
+    }
+  }
+
+  async setOnMapLoadedListener(callback?: MapListenerCallback<{id: string}>): Promise<void> {
+    if (this.onMapLoadedListener) {
+      this.onMapLoadedListener.remove();
+    }
+
+    if (callback) {
+      this.onMapLoadedListener = await CapacitorGoogleMaps.addListener('onMapLoaded', this.generateCallback(callback));
+    } else {
+      this.onMapLoadedListener = undefined;
     }
   }
 
@@ -1064,6 +1124,16 @@ export class GoogleMap {
     if (this.onMyLocationClickListener) {
       this.onMyLocationClickListener.remove();
       this.onMyLocationClickListener = undefined;
+    }
+
+    if (this.onMapLongClickListener) {
+      this.onMapLongClickListener.remove();
+      this.onMapLongClickListener = undefined;
+    }
+
+    if (this.onMapDoubleClickListener) {
+      this.onMapDoubleClickListener.remove();
+      this.onMapDoubleClickListener = undefined;
     }
   }
 

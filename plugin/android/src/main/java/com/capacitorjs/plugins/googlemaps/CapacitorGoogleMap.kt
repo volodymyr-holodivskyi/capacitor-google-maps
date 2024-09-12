@@ -1,6 +1,7 @@
 package com.capacitorjs.plugins.googlemaps
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.*
 import android.location.Location
 import android.util.Log
@@ -39,13 +40,15 @@ class CapacitorGoogleMap(
         OnInfoWindowClickListener,
         OnCircleClickListener,
         OnPolylineClickListener,
-        OnPolygonClickListener {
+        OnPolygonClickListener,
+        OnMapLongClickListener,
+		OnMapLoadedCallback {
     private var mapView: MapView
     private var googleMap: GoogleMap? = null
     private val markers = HashMap<String, CapacitorGoogleMapMarker>()
     private val polygons = HashMap<String, CapacitorGoogleMapsPolygon>()
     private val circles = HashMap<String, CapacitorGoogleMapsCircle>()
-    private val polylines = HashMap<String, CapacitorGoogleMapPolyline>()        
+    private val polylines = HashMap<String, CapacitorGoogleMapPolyline>()
     private val markerIcons = HashMap<String, Bitmap>()
     private var clusterManager: ClusterManager<CapacitorGoogleMapMarker>? = null
 
@@ -310,7 +313,7 @@ class CapacitorGoogleMap(
                     }
                     val googleMapPolyline = googleMap?.addPolyline(polylineOptions.await())
                     googleMapPolyline?.tag = it.tag
-                    
+
                     it.googleMapsPolyline = googleMapPolyline
 
                     polylines[googleMapPolyline!!.id] = it
@@ -511,7 +514,81 @@ class CapacitorGoogleMap(
         }
     }
 
-    fun setCamera(config: GoogleMapCameraConfig, callback: (error: GoogleMapsError?) -> Unit) {
+    fun takeSnapshot(callback: (result: String, error: GoogleMapsError?) -> Unit) {
+            try {
+                googleMap ?: throw GoogleMapNotAvailable()
+
+                    googleMap!!.snapshot {
+                            bitmap ->
+                        try {
+                            val filename = "snapshot.png"
+                            val bridge = delegate.bridge
+                            val context = bridge.context
+                            val fos = context.openFileOutput(filename, Context.MODE_PRIVATE)
+                            bitmap?.compress(Bitmap.CompressFormat.PNG, 90, fos)
+                            fos.close()
+
+                            val filePath = "${context.filesDir.absolutePath}/$filename"
+
+                            callback(filePath, null)
+                        } catch (e: GoogleMapsError) {
+                            callback("", e)
+                        }
+                    }
+
+            } catch (e: GoogleMapsError) {
+                callback("", e)
+            }
+
+    }
+
+    fun addGroundOverlay(latitude: Double, longitude: Double, width: Float, imagePath: String) {
+		try {
+			googleMap ?: throw GoogleMapNotAvailable()
+
+			val position = LatLng(latitude, longitude)
+
+			val pl = CapacitorGoogleMapsGroundOverlay(delegate.bridge)
+
+			val callback = PluginAsync(
+				onPostExecuteFunc = { result ->
+					if (result == null) {
+						//callbackContext.error("Cannot create a ground overlay")
+						//return
+						println("Error: result NULL")
+					} else {
+						try {
+							val bitmapDescriptor = BitmapDescriptorFactory.fromBitmap(result.image)
+							val groundOverlayOptions = GroundOverlayOptions().image(bitmapDescriptor).position(position, width, 1080F)
+							googleMap!!.addGroundOverlay(groundOverlayOptions)
+						} catch (e: java.lang.Exception) {
+							Log.e("CapacitorGoogleMaps", e.stackTraceToString())
+						}
+					}
+				},
+				onErrorFunc = { errorMsg ->
+					if (errorMsg != null) {
+						println("Error: $errorMsg")
+					} else {
+						println("Unknown error occurred.")
+					}
+				}
+			)
+
+			pl.setImage_(imagePath, callback)
+
+
+
+
+
+
+
+		} catch (e: GoogleMapsError) {
+		}
+	}
+
+
+		fun setCamera(config: GoogleMapCameraConfig, callback: (error: GoogleMapsError?) -> Unit) {
         try {
             googleMap ?: throw GoogleMapNotAvailable()
             CoroutineScope(Dispatchers.Main).launch {
@@ -739,7 +816,7 @@ class CapacitorGoogleMap(
 
         return polygonOptions
     }
-    
+
     private fun buildPolyline(line: CapacitorGoogleMapPolyline): PolylineOptions {
         val polylineOptions = PolylineOptions()
         polylineOptions.width(line.strokeWidth * this.config.devicePixelRatio)
@@ -884,6 +961,8 @@ class CapacitorGoogleMap(
             this@CapacitorGoogleMap.googleMap?.setOnMyLocationClickListener(this@CapacitorGoogleMap)
             this@CapacitorGoogleMap.googleMap?.setOnInfoWindowClickListener(this@CapacitorGoogleMap)
             this@CapacitorGoogleMap.googleMap?.setOnPolylineClickListener(this@CapacitorGoogleMap)
+            this@CapacitorGoogleMap.googleMap?.setOnMapLongClickListener(this@CapacitorGoogleMap)
+			this@CapacitorGoogleMap.googleMap?.setOnMapLoadedCallback(this@CapacitorGoogleMap)
         }
     }
 
@@ -1075,6 +1154,20 @@ class CapacitorGoogleMap(
 
         delegate.notify("onCircleClick", data)
     }
+
+    override fun onMapLongClick(point: LatLng) {
+        val data = JSObject()
+        data.put("mapId", this@CapacitorGoogleMap.id)
+        data.put("latitude", point.latitude)
+        data.put("longitude", point.longitude)
+        delegate.notify("onMapLongClick", data)
+    }
+
+			override fun onMapLoaded() {
+				val data = JSObject()
+				data.put("mapId", this@CapacitorGoogleMap.id)
+				delegate.notify("onMapLoaded", data)
+			}
 }
 
 fun getLatLngBoundsJSObject(bounds: LatLngBounds): JSObject {

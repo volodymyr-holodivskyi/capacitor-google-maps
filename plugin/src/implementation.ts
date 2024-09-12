@@ -169,6 +169,13 @@ export interface FitBoundsArgs {
   padding?: number;
 }
 
+export interface GroundOverlayArgs {
+  latitude: number;
+  longitude: number;
+  width: number;
+  imagePath: string;
+}
+
 export interface CapacitorGoogleMapsPlugin extends Plugin {
   create(options: CreateMapArgs): Promise<void>;
   enableTouch(args: { id: string }): Promise<void>;
@@ -202,6 +209,8 @@ export interface CapacitorGoogleMapsPlugin extends Plugin {
   fitBounds(args: FitBoundsArgs): Promise<void>;
   mapBoundsContains(args: MapBoundsContainsArgs): Promise<{ contains: boolean }>;
   mapBoundsExtend(args: MapBoundsExtendArgs): Promise<{ bounds: LatLngBounds }>;
+  takeSnapshot(args: { id: string }): Promise<{ snapshot: string | HTMLElement }>;
+  addGroundOverlay(args: GroundOverlayArgs & {id: string}): Promise<void>;
 }
 
 const CapacitorGoogleMaps = registerPlugin<CapacitorGoogleMapsPlugin>('CapacitorGoogleMaps', {
@@ -213,7 +222,7 @@ CapacitorGoogleMaps.addListener('isMapInFocus', (data) => {
   const y = data.y;
 
   const elem = document.elementFromPoint(x, y) as HTMLElement | null;
-  const internalId = elem?.dataset?.internalId;
+  const internalId = elem?.dataset?.['internalId'];
   const mapInFocus = internalId === data.mapId;
 
   CapacitorGoogleMaps.dispatchMapEvent({ id: data.mapId, focus: mapInFocus });

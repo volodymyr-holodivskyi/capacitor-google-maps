@@ -17,6 +17,7 @@ import com.google.android.gms.maps.model.LatLngBounds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.jetbrains.annotations.NotNull
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -986,6 +987,53 @@ class CapacitorGoogleMapsPlugin : Plugin(), OnMapsSdkInitializedCallback {
             handleError(call, e)
         } catch (e: Exception) {
             handleError(call, e)
+        }
+    }
+
+    @PluginMethod()
+    fun takeSnapshot(call: PluginCall) {
+        val id = call.getString("id")
+        id ?: throw InvalidMapIdError()
+
+        val map = maps[id]
+        map ?: throw MapNotFoundError()
+
+        CoroutineScope(Dispatchers.Main).launch {
+            map.takeSnapshot { filepath, error ->
+
+                if(error !== null) {
+                    handleError(call, error)
+                }
+
+                if(filepath.isNotEmpty()) {
+                    val data = JSObject().put("snapshot", filepath)
+                    call.resolve(data)
+                }
+            }
+        }
+    }
+
+    @PluginMethod()
+    fun addGroundOverlay(call: PluginCall) {
+        val id = call.getString("id")
+        id ?: throw InvalidMapIdError()
+
+        val latitude = call.getDouble("latitude")
+        val longitude = call.getDouble("longitude")
+        val width = call.getFloat("width")
+        val imagePath = call.getString("imagePath")
+
+        val map = maps[id]
+        map ?: throw MapNotFoundError()
+
+        CoroutineScope(Dispatchers.Main).launch {
+            if (latitude != null && longitude != null && width != null && imagePath != null) {
+                map.addGroundOverlay(latitude, longitude, width, imagePath)
+                call.resolve()
+            } else {
+                call.reject("")
+            }
+
         }
     }
 

@@ -1,0 +1,15 @@
+0 silly argv {
+0 silly argv   _: [ 'run' ],
+0 silly argv   lernaVersion: '8.1.8',
+0 silly argv   '$0': 'node_modules\\lerna\\dist\\cli.js',
+0 silly argv   script: 'build'
+0 silly argv }
+1 notice cli v8.1.8
+2 verbose packageConfigs Package manager "pnpm" detected. Resolving packages using `pnpm-workspace.yaml`.
+3 verbose rootPath D:\capacitor-google-maps
+4 error Failed to process project graph. Run "nx reset" to fix this. Please report the issue if you keep seeing it.
+4 error   An error occurred while processing files for the nx/core/package-json plugin.
+4 error     - Plugin worker nx/core/package-json exited unexpectedly with code 0
+4 error       Error: Plugin worker nx/core/package-json exited unexpectedly with code 0
+4 error           at ChildProcess.<anonymous> (D:\capacitor-google-maps\node_modules\nx\src\project-graph\plugins\isolation\plugin-pool.js:194:37)
+4 error           at ChildProcess.emit (node:events:514:28)

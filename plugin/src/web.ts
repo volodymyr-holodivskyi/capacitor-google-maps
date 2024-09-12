@@ -27,6 +27,7 @@ import type {
   RemoveCirclesArgs,
   AddPolylinesArgs,
   RemovePolylinesArgs,
+  GroundOverlayArgs,
 } from './implementation';
 
 export class CapacitorGoogleMapsWeb extends WebPlugin implements CapacitorGoogleMapsPlugin {
@@ -466,6 +467,15 @@ export class CapacitorGoogleMapsWeb extends WebPlugin implements CapacitorGoogle
     return { bounds: result };
   }
 
+  async takeSnapshot(_args: { id: string; }): Promise<{ snapshot: string | HTMLElement }> {
+      const snapshot = this.maps[_args.id].map.getDiv();
+      return {snapshot: snapshot};
+  }
+
+  async addGroundOverlay(_args: GroundOverlayArgs): Promise<void> {
+    throw new Error('Method not supported on web.');
+  }
+
   private getLatLngBounds(_args: LatLngBounds): google.maps.LatLngBounds {
     return new google.maps.LatLngBounds(
       new google.maps.LatLng(_args.southwest.lat, _args.southwest.lng),
@@ -587,6 +597,14 @@ export class CapacitorGoogleMapsWeb extends WebPlugin implements CapacitorGoogle
 
     map.addListener('click', (e: google.maps.MapMouseEvent | google.maps.IconMouseEvent) => {
       this.notifyListeners('onMapClick', {
+        mapId: mapId,
+        latitude: e.latLng?.lat(),
+        longitude: e.latLng?.lng(),
+      });
+    });
+
+    map.addListener('dblclick', (e: google.maps.MapMouseEvent | google.maps.IconMouseEvent) => {
+      this.notifyListeners('onMapDoubleClick', {
         mapId: mapId,
         latitude: e.latLng?.lat(),
         longitude: e.latLng?.lng(),
