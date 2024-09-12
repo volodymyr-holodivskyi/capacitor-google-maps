@@ -2,7 +2,7 @@
 0 silly argv   _: [ 'run' ],
 0 silly argv   lernaVersion: '8.1.8',
 0 silly argv   '$0': 'node_modules\\lerna\\dist\\cli.js',
-0 silly argv   script: 'build'
+0 silly argv   script: 'lint'
 0 silly argv }
 1 notice cli v8.1.8
 2 verbose packageConfigs Package manager "pnpm" detected. Resolving packages using `pnpm-workspace.yaml`.

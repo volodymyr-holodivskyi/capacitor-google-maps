@@ -2,7 +2,6 @@
   "name": "root",
   "private": true,
   "scripts": {
-    "prepare": "husky",
     "build": "lerna run build && yes | cp ./plugin/README.md ./README.md",
     "lint": "pnpm lerna run lint",
     "fmt": "pnpm lerna run fmt",
@@ -18,7 +17,6 @@
   "devDependencies": {
     "@capacitor/ios": "^6.1.0",
     "@types/node": "^20.11.25",
-    "husky": "^9.0.1",
     "lerna": "^8.1.2",
     "typescript": "^5.4.2"
   },
@@ -26,7 +24,6 @@
     "node": ">=20",
     "pnpm": ">=8"
   },
-  "dependencies": {},
   "workspaces": [
     "plugin"
   ]
