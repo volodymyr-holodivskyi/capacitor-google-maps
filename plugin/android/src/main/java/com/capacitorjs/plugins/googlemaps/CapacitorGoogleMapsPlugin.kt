@@ -999,14 +999,14 @@ class CapacitorGoogleMapsPlugin : Plugin(), OnMapsSdkInitializedCallback {
         map ?: throw MapNotFoundError()
 
         CoroutineScope(Dispatchers.Main).launch {
-            map.takeSnapshot { filepath, error ->
+            map.takeSnapshot { snapshot, error ->
 
                 if(error !== null) {
                     handleError(call, error)
                 }
 
-                if(filepath.isNotEmpty()) {
-                    val data = JSObject().put("snapshot", filepath)
+                if(snapshot.isNotEmpty()) {
+                    val data = JSObject().put("snapshot", snapshot)
                     call.resolve(data)
                 }
             }
@@ -1032,7 +1032,7 @@ class CapacitorGoogleMapsPlugin : Plugin(), OnMapsSdkInitializedCallback {
                 map.addGroundOverlay(latitude, longitude, width, height, imagePath)
                 call.resolve()
             } else {
-                call.reject("")
+                call.reject("Missing parameters")
             }
 
         }

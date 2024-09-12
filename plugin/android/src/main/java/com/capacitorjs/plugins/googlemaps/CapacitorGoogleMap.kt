@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.location.Location
+import android.util.Base64
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
@@ -19,6 +20,7 @@ import com.google.maps.android.clustering.Cluster
 import com.google.maps.android.clustering.ClusterManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.net.URL
 
@@ -521,16 +523,10 @@ class CapacitorGoogleMap(
                     googleMap!!.snapshot {
                             bitmap ->
                         try {
-                            val filename = "snapshot.png"
-                            val bridge = delegate.bridge
-                            val context = bridge.context
-                            val fos = context.openFileOutput(filename, Context.MODE_PRIVATE)
-                            bitmap?.compress(Bitmap.CompressFormat.PNG, 90, fos)
-                            fos.close()
-
-                            val filePath = "${context.filesDir.absolutePath}/$filename"
-
-                            callback(filePath, null)
+                            if (bitmap !== null) {
+                                val base64Image = bitmapToBase64(bitmap)
+                                callback(base64Image, null)
+                            }
                         } catch (e: GoogleMapsError) {
                             callback("", e)
                         }
@@ -540,6 +536,13 @@ class CapacitorGoogleMap(
                 callback("", e)
             }
 
+    }
+
+    private fun bitmapToBase64(bitmap: Bitmap): String {
+        val outputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+        val byteArray = outputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.NO_WRAP)
     }
 
     fun addGroundOverlay(latitude: Double, longitude: Double, width: Float, height: Float, imagePath: String) {
