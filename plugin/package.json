@@ -1,7 +1,7 @@
 {
-  "name": "@capacitor/google-maps",
-  "version": "6.0.1",
-  "description": "Google maps on Capacitor",
+  "name": "vholodivskiy-capacitor-google-maps",
+  "version": "5.0.1",
+  "description": "Fork of Ionic Team Capacitor Google Maps",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
   "typings": "dist/typings/index.d.ts",
@@ -20,11 +20,11 @@
     "ios/Plugin/",
     "CapacitorGoogleMaps.podspec"
   ],
-  "author": "Ionic <hi@ionicframework.com>",
+  "author": "Volodymyr Holodivskyi <volodymyrholodivskyi@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ionic-team/capacitor-google-maps.git"
+    "url": "https://github.com/volodymyr-holodivskyi/capacitor-google-maps.git"
   },
   "bugs": {
     "url": "https://github.com/ionic-team/capacitor-google-maps/issues"
