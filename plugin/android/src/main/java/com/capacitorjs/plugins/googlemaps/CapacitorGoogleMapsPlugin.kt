@@ -1038,6 +1038,27 @@ class CapacitorGoogleMapsPlugin : Plugin(), OnMapsSdkInitializedCallback {
         }
     }
 
+    @PluginMethod()
+    fun getZoomLevel(call: PluginCall) {
+        val id = call.getString("id")
+        id ?: throw InvalidMapIdError()
+
+        val map = maps[id]
+        map ?: throw MapNotFoundError()
+
+        CoroutineScope(Dispatchers.Main).launch {
+            map.getZoomLevel { zoomLevel ->
+                if (zoomLevel != null) {
+                    val data = JSObject().put("zoomLevel", zoomLevel)
+                    call.resolve(data)
+                } else {
+                    call.reject("")
+                }
+            }
+
+        }
+    }
+
     private fun createLatLng(point: JSObject): LatLng {
         return LatLng(
             point.getDouble("lat"),

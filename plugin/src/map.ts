@@ -87,8 +87,10 @@ export interface GoogleMapInterface {
   setOnMyLocationClickListener(callback?: MapListenerCallback<MapClickCallbackData>): Promise<void>;
   setOnMapDoubleClickListener(callback?: MapListenerCallback<MapClickCallbackData>): Promise<void>;
   setOnMapLoadedListener(callback?: MapListenerCallback<{id: string}>): Promise<void>;
+  setOnZoomChangedListener(callback?: MapListenerCallback<{zoomLevel: number | undefined}>): Promise<void>;
   takeSnapshot(): Promise<{snapshot: string | HTMLElement}>;
   addGroundOverlay(groundOverlayOptions: GroundOverlayArgs): Promise<void>;
+  getZoomLevel(): Promise<number | undefined>;
 }
 
 class MapCustomElement extends HTMLElement {
@@ -137,6 +139,7 @@ export class GoogleMap {
   private onMyLocationClickListener?: PluginListenerHandle;
   private onMapDoubleClickListener?: PluginListenerHandle;
   private onMapLoadedListener?: PluginListenerHandle;
+  private onZoomChangedListener?: PluginListenerHandle;
 
   private constructor(id: string) {
     this.id = id;
@@ -854,6 +857,18 @@ export class GoogleMap {
     }
   }
 
+  async setOnZoomChangedListener(callback?:  MapListenerCallback<{zoomLevel: number | undefined}>): Promise<void> {
+    if (this.onZoomChangedListener) {
+      this.onZoomChangedListener.remove();
+    }
+
+    if (callback) {
+      this.onZoomChangedListener = await CapacitorGoogleMaps.addListener('onZoomChanged', this.generateCallback(callback));
+    } else {
+      this.onZoomChangedListener = undefined;
+    }
+  }
+
   /**
    * Set the event listener on the map for 'onPolygonClick' events.
    *
@@ -1135,6 +1150,11 @@ export class GoogleMap {
     if (this.onMapDoubleClickListener) {
       this.onMapDoubleClickListener.remove();
       this.onMapDoubleClickListener = undefined;
+    }
+
+    if (this.onZoomChangedListener) {
+      this.onZoomChangedListener.remove();
+      this.onZoomChangedListener = undefined;
     }
   }
 

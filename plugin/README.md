@@ -325,8 +325,10 @@ export default MyMap;
 * [`setOnMyLocationClickListener(...)`](#setonmylocationclicklistener)
 * [`setOnMapDoubleClickListener(...)`](#setonmapdoubleclicklistener)
 * [`setOnMapLoadedListener(...)`](#setonmaploadedlistener)
+* [`setOnZoomChangedListener(...)`](#setonzoomchangedlistener)
 * [`takeSnapshot()`](#takesnapshot)
 * [`addGroundOverlay(...)`](#addgroundoverlay)
+* [`getZoomLevel()`](#getzoomlevel)
 * [Interfaces](#interfaces)
 * [Type Aliases](#type-aliases)
 * [Enums](#enums)
@@ -908,6 +910,19 @@ setOnMapLoadedListener(callback?: MapListenerCallback<{ id: string; }> | undefin
 --------------------
 
 
+### setOnZoomChangedListener(...)
+
+```typescript
+setOnZoomChangedListener(callback?: MapListenerCallback<{ zoomLevel: number | undefined; }> | undefined) => Promise<void>
+```
+
+| Param          | Type                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------- |
+| **`callback`** | <code><a href="#maplistenercallback">MapListenerCallback</a>&lt;{ zoomLevel: number; }&gt;</code> |
+
+--------------------
+
+
 ### takeSnapshot()
 
 ```typescript
@@ -928,6 +943,17 @@ addGroundOverlay(groundOverlayOptions: GroundOverlayArgs) => Promise<void>
 | Param                      | Type                                                            |
 | -------------------------- | --------------------------------------------------------------- |
 | **`groundOverlayOptions`** | <code><a href="#groundoverlayargs">GroundOverlayArgs</a></code> |
+
+--------------------
+
+
+### getZoomLevel()
+
+```typescript
+getZoomLevel() => Promise<number | undefined>
+```
+
+**Returns:** <code>Promise&lt;number&gt;</code>
 
 --------------------
 

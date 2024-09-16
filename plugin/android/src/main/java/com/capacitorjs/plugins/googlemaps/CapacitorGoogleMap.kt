@@ -56,6 +56,7 @@ class CapacitorGoogleMap(
 
     private val isReadyChannel = Channel<Boolean>()
     private var debounceJob: Job? = null
+    private var lastZoomLevel: Float = -1f
 
     init {
         val bridge = delegate.bridge
@@ -580,18 +581,21 @@ class CapacitorGoogleMap(
 
 			pl.setImage_(imagePath, callback)
 
-
-
-
-
-
-
 		} catch (e: GoogleMapsError) {
 		}
 	}
 
+    fun getZoomLevel(callback: (zoomLevel: Float?) -> Unit) {
+        try {
+            googleMap ?: throw GoogleMapNotAvailable()
 
-		fun setCamera(config: GoogleMapCameraConfig, callback: (error: GoogleMapsError?) -> Unit) {
+            callback(googleMap?.cameraPosition?.zoom)
+
+        }  catch (e: GoogleMapsError) {
+        }
+    }
+
+    fun setCamera(config: GoogleMapCameraConfig, callback: (error: GoogleMapsError?) -> Unit) {
         try {
             googleMap ?: throw GoogleMapNotAvailable()
             CoroutineScope(Dispatchers.Main).launch {
@@ -1110,6 +1114,11 @@ class CapacitorGoogleMap(
         data.put("zoom", this@CapacitorGoogleMap.googleMap?.cameraPosition?.zoom)
         delegate.notify("onCameraIdle", data)
         delegate.notify("onBoundsChanged", data)
+        val currentZoomLevel = googleMap?.cameraPosition?.zoom
+        if (currentZoomLevel != null && currentZoomLevel != lastZoomLevel) {
+            lastZoomLevel = currentZoomLevel
+            delegate.notify("onZoomChanged", JSObject().put("zoomLevel", lastZoomLevel))
+        }
     }
 
     override fun onCameraMoveStarted(reason: Int) {

@@ -212,6 +212,7 @@ export interface CapacitorGoogleMapsPlugin extends Plugin {
   mapBoundsExtend(args: MapBoundsExtendArgs): Promise<{ bounds: LatLngBounds }>;
   takeSnapshot(args: { id: string }): Promise<{ snapshot: string | HTMLElement }>;
   addGroundOverlay(args: GroundOverlayArgs & {id: string}): Promise<void>;
+  getZoomLevel(args: { id: string }): Promise<number | undefined>;
 }
 
 const CapacitorGoogleMaps = registerPlugin<CapacitorGoogleMapsPlugin>('CapacitorGoogleMaps', {

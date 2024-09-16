@@ -476,6 +476,10 @@ export class CapacitorGoogleMapsWeb extends WebPlugin implements CapacitorGoogle
     throw new Error('Method not supported on web.');
   }
 
+  async getZoomLevel(_args: { id: string; }): Promise<number | undefined> {
+    return this.maps[_args.id].map.getZoom();
+  }
+
   private getLatLngBounds(_args: LatLngBounds): google.maps.LatLngBounds {
     return new google.maps.LatLngBounds(
       new google.maps.LatLng(_args.southwest.lat, _args.southwest.lng),
@@ -610,6 +614,13 @@ export class CapacitorGoogleMapsWeb extends WebPlugin implements CapacitorGoogle
         longitude: e.latLng?.lng(),
       });
     });
+
+    map.addListener('zoom_changed', () => {
+      this.notifyListeners('onZoomChanged', {
+        mapId: mapId,
+        zoom: map.getZoom()
+      })
+    })
 
     this.notifyListeners('onMapReady', {
       mapId: mapId,
