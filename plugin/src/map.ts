@@ -594,6 +594,12 @@ export class GoogleMap {
     })
   }
 
+  async getZoomLevel(): Promise<number | undefined> {
+    return CapacitorGoogleMaps.getZoomLevel({
+      id: this.id
+    })
+  }
+
   async fitBounds(bounds: LatLngBounds, padding?: number): Promise<void> {
     return CapacitorGoogleMaps.fitBounds({
       id: this.id,
