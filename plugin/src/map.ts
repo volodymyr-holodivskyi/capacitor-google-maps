@@ -594,7 +594,7 @@ export class GoogleMap {
     })
   }
 
-  async getZoomLevel(): Promise<number | undefined> {
+  async getZoomLevel(): Promise<{ zoomLevel: number | undefined }> {
     return CapacitorGoogleMaps.getZoomLevel({
       id: this.id
     })

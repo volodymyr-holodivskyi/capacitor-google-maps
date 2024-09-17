@@ -476,8 +476,10 @@ export class CapacitorGoogleMapsWeb extends WebPlugin implements CapacitorGoogle
     throw new Error('Method not supported on web.');
   }
 
-  async getZoomLevel(_args: { id: string; }): Promise<number | undefined> {
-    return this.maps[_args.id].map.getZoom();
+  async getZoomLevel(_args: { id: string; }): Promise<{ zoomLevel: number | undefined }> {
+    return {
+      zoomLevel: this.maps[_args.id].map.getZoom()
+    };
   }
 
   private getLatLngBounds(_args: LatLngBounds): google.maps.LatLngBounds {
