@@ -1033,6 +1033,7 @@ A marker is an icon placed at a particular point on the map's surface.
 | **`tintColor`**  | <code>{ r: number; g: number; b: number; a: number; }</code> | Customizes the color of the default marker image. Each value must be between 0 and 255. Only for iOS and Android.                                                                         |                    | 4.2.0 |
 | **`draggable`**  | <code>boolean</code>                                         | Controls whether this marker can be dragged interactively                                                                                                                                 | <code>false</code> |       |
 | **`zIndex`**     | <code>number</code>                                          | Specifies the stack order of this marker, relative to other markers on the map. A marker with a high z-index is drawn on top of markers with lower z-indexes                              | <code>0</code>     |       |
+| **`iconId`**     | <code>string</code>                                          | Icon id that`s using for caching purposes.                                                                                                                                                |                    |       |
 
 
 #### Size
