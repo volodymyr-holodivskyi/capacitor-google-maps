@@ -184,6 +184,34 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
 
 	let imageCache = NSCache<NSString, UIImage>()
 
+	@objc func cacheMarkerIcon(_ call: CAPPluginCall) {
+		do {
+			guard let id = call.getString("id") else {
+				throw GoogleMapErrors.invalidArguments("Missing id")
+			}
+
+			guard let base64String = call.getString("base64") else {
+				throw GoogleMapErrors.invalidArguments("Missing base64 string")
+			}
+
+			// Check if the icon is already cached
+			if let _ = imageCache.object(forKey: id as NSString) {
+				call.resolve(["status": "already_cached"])
+				return
+			}
+
+			// Convert the base64 string to UIImage and cache it
+			if let data = Data(base64Encoded: base64String), let image = UIImage(data: data) {
+				imageCache.setObject(image, forKey: id as NSString)
+				call.resolve(["status": "cached"])
+			} else {
+				throw GoogleMapErrors.invalidArguments("Invalid base64 data")
+			}
+		} catch {
+			handleError(call, error: error)
+		}
+	}
+
     @objc func addMarker(_ call: CAPPluginCall) {
         do {
             guard let id = call.getString("id") else {
