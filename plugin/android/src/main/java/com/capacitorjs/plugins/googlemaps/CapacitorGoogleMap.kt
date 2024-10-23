@@ -856,46 +856,48 @@ class CapacitorGoogleMap(
         markerOptions.flat(marker.isFlat)
         markerOptions.draggable(marker.draggable)
         markerOptions.zIndex(marker.zIndex)
+
         if (marker.iconAnchor != null) {
             markerOptions.anchor(marker.iconAnchor!!.x, marker.iconAnchor!!.y)
         }
 
-
+        // Check if there's an icon URL (assumed to be a Data URL in this case)
         if (!marker.iconUrl.isNullOrEmpty()) {
             if (this.markerIcons.contains(marker.iconUrl)) {
                 val cachedBitmap = this.markerIcons[marker.iconUrl]
                 markerOptions.icon(getResizedIcon(cachedBitmap!!, marker))
             } else {
                 try {
-                    var stream: InputStream? = null
-                    if (marker.iconUrl!!.startsWith("https:")) {
-                        stream = URL(marker.iconUrl).openConnection().getInputStream()
-                    } else {
-                        stream = this.delegate.context.assets.open("public/${marker.iconUrl}")
-                    }
-                    var bitmap = BitmapFactory.decodeStream(stream)
-                    this.markerIcons[marker.iconUrl!!] = bitmap
-                    markerOptions.icon(getResizedIcon(bitmap, marker))
-                } catch (e: Exception) {
-                    var detailedMessage = "${e.javaClass} - ${e.localizedMessage}"
-                    if (marker.iconUrl!!.endsWith(".svg")) {
-                        detailedMessage = "SVG not supported"
-                    }
+                    val base64Data = marker.iconUrl!!.substringAfter("base64,", "")
+                
+                    // Check if Data URL has a valid base64 part
+                    if (base64Data.isNotEmpty()) {
+                        // Decode the Base64 string into a Bitmap
+                        val decodedString = Base64.decode(base64Data, Base64.DEFAULT)
+                        val bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
 
+                        // Cache the bitmap for future use
+                        this.markerIcons[marker.iconId!!] = bitmap
+                        markerOptions.icon(getResizedIcon(bitmap, marker))
+                    } else {
+                        Log.w("CapacitorGoogleMaps", "Invalid Base64 data URL: ${marker.iconUrl}. Using default marker icon.")
+                    }
+                } catch (e: Exception) {
+                    val detailedMessage = "${e.javaClass} - ${e.localizedMessage}"
                     Log.w(
-                            "CapacitorGoogleMaps",
-                            "Could not load image '${marker.iconUrl}': ${detailedMessage}. Using default marker icon."
+                        "CapacitorGoogleMaps",
+                        "Could not decode Base64 image: ${detailedMessage}. Using default marker icon."
                     )
                 }
             }
         } else {
+            // Fallback to color marker if no icon URL is provided
             if (marker.colorHue != null) {
                 markerOptions.icon(BitmapDescriptorFactory.defaultMarker(marker.colorHue!!))
             }
         }
 
         marker.markerOptions = markerOptions
-
         return markerOptions
     }
 

@@ -389,6 +389,12 @@ export interface Marker {
    * @default 0
    */
   zIndex?: number;
+
+  /**
+   * Icon id that`s using for caching purposes.
+   *
+   */
+  iconId?: string;
 }
 
 /**
