@@ -7,6 +7,7 @@ public struct Marker {
 	let title: String?
 	let snippet: String?
 	let isFlat: Bool?
+	var iconId: String?
 	var iconUrl: String?
 	let iconSize: CGSize?
 	let iconAnchor: CGPoint?
@@ -15,7 +16,7 @@ public struct Marker {
 	let zIndex: Int32
 	var icon: UIImage?
 
-	init(fromJSObject: JSObject) throws {
+	init(fromJSObject: JSObject, imageCache: NSCache<NSString, UIImage>) throws {
 		guard let latLngObj = fromJSObject["coordinate"] as? JSObject else {
 			throw GoogleMapErrors.invalidArguments("Marker object is missing the required 'coordinate' property")
 		}
@@ -23,6 +24,8 @@ public struct Marker {
 		guard let lat = latLngObj["lat"] as? Double, let lng = latLngObj["lng"] as? Double else {
 			throw GoogleMapErrors.invalidArguments("LatLng object is missing the required 'lat' and/or 'lng' property")
 		}
+
+        self.iconId = fromJSObject["iconId"] as? String
 
 		var iconSize: CGSize?
 		if let sizeObj = fromJSObject["iconSize"] as? JSObject {
@@ -64,16 +67,18 @@ public struct Marker {
 		self.color = tintColor
 		self.zIndex = Int32((fromJSObject["zIndex"] as? Int) ?? 0)
 
-		// Handle the base64 image (if provided)
-		if let iconUrl = self.iconUrl, iconUrl.hasPrefix("data:image/png;base64,") {
-			if let base64Data = Data(base64Encoded: iconUrl.replacingOccurrences(of: "data:image/png;base64,", with: "")) {
-				self.icon = UIImage(data: base64Data)
-				self.iconUrl = nil // Remove iconUrl after assigning the icon
+		if let iconId = self.iconId, let cachedIcon = imageCache.object(forKey: iconId as NSString) {
+            self.icon = cachedIcon
+            self.iconUrl = nil
+        } else if let iconUrl = self.iconUrl, iconUrl.hasPrefix("data:image/png;base64,") {
+			if let base64Data = Data(base64Encoded: iconUrl.replacingOccurrences(of: "data:image/png;base64,", with: "")),
+			let image = UIImage(data: base64Data) {
+				self.icon = image
+				self.iconUrl = nil
 
-				if self.icon == nil {
-					print("Base64 image conversion failed.")
-				} else {
-					print("Base64 image successfully converted.")
+				// Cache the image for future use
+				if let iconId = self.iconId {
+					imageCache.setObject(image, forKey: iconId as NSString)
 				}
 			}
 		}

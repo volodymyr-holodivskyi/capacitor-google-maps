@@ -182,6 +182,8 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
         }
     }
 
+	let imageCache = NSCache<NSString, UIImage>()
+
     @objc func addMarker(_ call: CAPPluginCall) {
         do {
             guard let id = call.getString("id") else {
@@ -192,7 +194,7 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
                 throw GoogleMapErrors.invalidArguments("marker object is missing")
             }
 
-            let marker = try Marker(fromJSObject: markerObj)
+            let marker = try Marker(fromJSObject: markerObj, imageCache: imageCache)
 
             guard let map = self.maps[id] else {
                 throw GoogleMapErrors.mapNotFound
@@ -228,7 +230,7 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
             var markers: [Marker] = []
 
             try markerObjs.forEach { marker in
-                let marker = try Marker(fromJSObject: marker)
+                let marker = try Marker(fromJSObject: marker, imageCache: imageCache)
                 markers.append(marker)
             }
 
