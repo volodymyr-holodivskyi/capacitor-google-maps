@@ -616,8 +616,12 @@ public class Map {
             newMarker.groundAnchor = iconAnchor
         }
 
-        // cache and reuse marker icon uiimages
-        if let iconUrl = marker.iconUrl {
+        // If icon (base64) is already set, assign it directly
+		if let base64Icon = marker.icon {
+			newMarker.icon = getResizedIcon(base64Icon, marker)
+		}
+		// Otherwise, proceed with the URL or color options
+		else if let iconUrl = marker.iconUrl {
             if let iconImage = self.markerIcons[iconUrl] {
                 newMarker.icon = getResizedIcon(iconImage, marker)
             } else {
