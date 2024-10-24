@@ -910,6 +910,79 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
         }
     }
 
+    @objc func takeSnapshot(_ call: CAPPluginCall) {
+    // Create snapshot options
+		do {
+			guard let id = call.getString("id"), let map = maps[id] else {
+				throw GoogleMapErrors.invalidMapId
+			}
+
+			// Assuming `map.mapViewController` has a `mapView` property of type GMSMapView
+			let mapView = map.mapViewController.GMapView // Access the GMSMapView instance from your Map object
+			DispatchQueue.main.async {
+				// Render the map view into an image
+				let renderer = UIGraphicsImageRenderer(size: mapView!.bounds.size)
+				let image = renderer.image { _ in
+					mapView!.drawHierarchy(in: mapView!.bounds, afterScreenUpdates: true)
+				}
+				
+				// Convert the image to PNG data and then to a Base64 string
+				if let imageData = image.pngData() {
+					let base64String = imageData.base64EncodedString()
+					call.resolve(["snapshot": base64String])
+				} else {
+					call.reject("Failed to convert image to data")
+				}
+			}
+		} catch {
+			handleError(call, error: error)
+		}
+    }
+	
+	@objc func addGroundOverlay(_ call: CAPPluginCall) {
+		guard let latitude = call.getDouble("latitude"),
+			  let longitude = call.getDouble("longitude"),
+			  let width = call.getFloat("width"),
+			  let height = call.getFloat("height"),
+			  let imagePath = call.getString("imagePath") else {
+			call.reject("Missing required parameters")
+			return
+		}
+
+		// Ensure that mapView exists
+		guard let id = call.getString("id"), let map = maps[id] else {
+			call.reject("MapView not initialized")
+			return
+	   }
+
+	   let mapView = map.mapViewController.GMapView
+
+		// Create the southwest and northeast coordinates for the overlay bounds
+		let southWestLat = latitude - Double(height) / 200000
+		let southWestLng = longitude - Double(width) / 150000
+		let northEastLat = latitude + Double(height) / 200000
+		let northEastLng = longitude + Double(width) / 150000
+
+		let southWest = CLLocationCoordinate2D(latitude: southWestLat, longitude: southWestLng)
+		let northEast = CLLocationCoordinate2D(latitude: northEastLat, longitude: northEastLng)
+		let overlayBounds = GMSCoordinateBounds(coordinate: southWest, coordinate: northEast)
+
+		// Load the image from the imagePath
+		guard let imageUrl = URL(string: imagePath),
+			  let imageData = try? Data(contentsOf: imageUrl),
+			  let icon = UIImage(data: imageData) else {
+			call.reject("Failed to load image from URL: \(imagePath)")
+			return
+		}
+
+		// Create the GMSGroundOverlay object
+		let groundOverlay = GMSGroundOverlay(bounds: overlayBounds, icon: icon)
+		groundOverlay.bearing = 0 // Adjust the bearing if needed
+		groundOverlay.map = mapView // Add the overlay to the map
+
+		call.resolve()
+	}
+
     private func getGMSCoordinateBounds(_ bounds: JSObject) throws -> GMSCoordinateBounds {
         guard let southwest = bounds["southwest"] as? JSObject else {
             throw GoogleMapErrors.unhandledError("Bounds southwest property not formatted properly.")
