@@ -25,7 +25,7 @@ public struct Marker {
 			throw GoogleMapErrors.invalidArguments("LatLng object is missing the required 'lat' and/or 'lng' property")
 		}
 
-        self.iconId = fromJSObject["iconId"] as? String
+		self.iconId = fromJSObject["iconId"] as? String
 
 		var iconSize: CGSize?
 		if let sizeObj = fromJSObject["iconSize"] as? JSObject {
@@ -68,11 +68,11 @@ public struct Marker {
 		self.zIndex = Int32((fromJSObject["zIndex"] as? Int) ?? 0)
 
 		if let iconId = self.iconId, let cachedIcon = imageCache.object(forKey: iconId as NSString) {
-            self.icon = cachedIcon
-            self.iconUrl = nil
-        } else if let iconUrl = self.iconUrl, iconUrl.hasPrefix("data:image/png;base64,") {
+			self.icon = cachedIcon
+			self.iconUrl = nil
+		} else if let iconUrl = self.iconUrl, iconUrl.hasPrefix("data:image/png;base64,") {
 			if let base64Data = Data(base64Encoded: iconUrl.replacingOccurrences(of: "data:image/png;base64,", with: "")),
-			let image = UIImage(data: base64Data) {
+			   let image = UIImage(data: base64Data) {
 				self.icon = image
 				self.iconUrl = nil
 
