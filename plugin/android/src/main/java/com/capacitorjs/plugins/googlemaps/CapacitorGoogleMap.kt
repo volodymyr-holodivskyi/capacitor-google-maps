@@ -883,7 +883,7 @@ class CapacitorGoogleMap(
         // Check if there's an icon URL (assumed to be a Data URL in this case)
         if (!marker.iconUrl.isNullOrEmpty() && !marker.iconId.isNullOrEmpty()) {
             if (this.markerIcons.contains(marker.iconId)) {
-                val cachedBitmap = this.markerIcons[marker.iconUrl]
+                val cachedBitmap = this.markerIcons[marker.iconId]
                 markerOptions.icon(getResizedIcon(cachedBitmap!!, marker))
             } else {
                 try {
