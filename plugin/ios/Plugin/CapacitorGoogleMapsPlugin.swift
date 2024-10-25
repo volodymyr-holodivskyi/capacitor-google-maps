@@ -1063,6 +1063,29 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
 
     // --- EVENT LISTENERS ---
 
+    // Implement the map long press event handler
+    public func mapView(_ mapView: GMSMapView, didLongPressAt coordinate: CLLocationCoordinate2D) {
+        // Create a data object to send to the JavaScript side
+        let data = [
+            "mapId":  self.findMapIdByMapView(mapView),
+            "latitude": coordinate.latitude,
+            "longitude": coordinate.longitude
+        ] as [String : Any]
+
+        // Notify Capacitor about the long press event
+        notifyListeners("onMapLongClick", data: data)
+    }
+
+    //Notify on MapLoaded
+	public func mapViewDidFinishTileRendering(_ mapView: GMSMapView) {
+		// Prepare the data to send
+		var data = JSObject()
+		data["mapId"] = self.findMapIdByMapView(mapView)
+
+		// Notify the delegate that the map has finished loading
+		self.notifyListeners("onMapLoaded", data: data)
+	}
+
     // onCameraIdle
     public func mapView(_ mapView: GMSMapView, idleAt cameraPosition: GMSCameraPosition) {
         let mapId = self.findMapIdByMapView(mapView)
