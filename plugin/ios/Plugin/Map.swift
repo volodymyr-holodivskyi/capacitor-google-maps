@@ -432,8 +432,12 @@ public class Map {
     }
 
     func setMapType(mapType: GMSMapViewType) throws {
-        DispatchQueue.main.sync {
-            self.mapViewController.GMapView.mapType = mapType
+         guard let gMapView = self.mapViewController.GMapView else {
+            return
+        }
+                
+        DispatchQueue.main.async {
+            gMapView.mapType = mapType
         }
     }
 
