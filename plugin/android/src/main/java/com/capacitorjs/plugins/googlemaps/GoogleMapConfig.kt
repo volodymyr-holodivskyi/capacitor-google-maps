@@ -1,5 +1,7 @@
 package com.capacitorjs.plugins.googlemaps
 
+import android.util.Log
+import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMapOptions
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -17,6 +19,7 @@ class GoogleMapConfig(fromJSONObject: JSONObject) {
     var devicePixelRatio: Float = 1.00f
     var styles: String? = null
     var mapId: String? = null
+	var mapType: String? = null
 
     init {
         if (!fromJSONObject.has("width")) {
@@ -88,6 +91,27 @@ class GoogleMapConfig(fromJSONObject: JSONObject) {
         mapId = fromJSONObject.getString("androidMapId")
 
         googleMapOptions = GoogleMapOptions().camera(cameraPosition).liteMode(liteMode)
+
+		mapType = fromJSONObject.getString("mapTypeId").lowercase()
+
+		val mapTypeInt: Int =
+			when (mapType) {
+				"normal" -> GoogleMap.MAP_TYPE_NORMAL
+				"hybrid" -> GoogleMap.MAP_TYPE_HYBRID
+				"satellite" -> GoogleMap.MAP_TYPE_SATELLITE
+				"terrain" -> GoogleMap.MAP_TYPE_TERRAIN
+				"none" -> GoogleMap.MAP_TYPE_NONE
+				else -> {
+					Log.w(
+						"CapacitorGoogleMaps",
+						"unknown mapView type '$mapType'  Defaulting to normal."
+					)
+					GoogleMap.MAP_TYPE_NORMAL
+				}
+			}
+
+		googleMapOptions?.mapType(mapTypeInt)
+
         if (mapId != null) {
             googleMapOptions?.mapId(mapId!!)
         }
