@@ -448,7 +448,11 @@ public class Map {
 
     func enableIndoorMaps(enabled: Bool) throws {
         DispatchQueue.main.sync {
-            self.mapViewController.GMapView.isIndoorEnabled = enabled
+            if let gMapView = self.mapViewController.GMapView {
+                gMapView.isIndoorEnabled = enabled
+            } else {
+                print("Error: GMapView is nil.")
+            }
         }
     }
 
