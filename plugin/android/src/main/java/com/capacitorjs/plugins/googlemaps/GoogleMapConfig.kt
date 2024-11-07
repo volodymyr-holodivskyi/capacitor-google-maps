@@ -92,7 +92,7 @@ class GoogleMapConfig(fromJSONObject: JSONObject) {
 
         googleMapOptions = GoogleMapOptions().camera(cameraPosition).liteMode(liteMode)
 
-		mapType = fromJSONObject.getString("mapTypeId").lowercase()
+		mapType = fromJSONObject.has("mapTypeId") && fromJSONObject.getString("mapTypeId").lowercase()
 
 		val mapTypeInt: Int =
 			when (mapType) {
