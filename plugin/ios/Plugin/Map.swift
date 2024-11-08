@@ -99,11 +99,6 @@ public class Map {
 
     func render() {
         DispatchQueue.main.async {
-            // Ensure the mapViewController and its config are available
-            guard let gMapView = self.mapViewController.GMapView else {
-                return
-            }
-
             self.mapViewController.mapViewBounds = [
                 "width": self.config.width,
                 "height": self.config.height,
@@ -124,12 +119,12 @@ public class Map {
                 target.removeAllSubview()
                 self.mapViewController.view.frame = target.bounds
                 target.addSubview(self.mapViewController.view)
-                gMapView.delegate = self.delegate
+                self.mapViewController.GMapView.delegate = self.delegate
             }
 
             if let styles = self.config.styles {
                 do {
-                    gMapView.mapStyle = try GMSMapStyle(jsonString: styles)
+                    self.mapViewController.GMapView.mapStyle = try GMSMapStyle(jsonString: styles)
                 } catch {
                     CAPLog.print("Invalid Google Maps styles")
                 }
@@ -228,17 +223,13 @@ public class Map {
     func addMarker(marker: Marker) throws -> Int {
         var markerHash = 0
 
-        guard let gMapView = self.mapViewController.GMapView else {
-            return
-        }
-
         DispatchQueue.main.sync {
             let newMarker = self.buildMarker(marker: marker)
 
             if self.mapViewController.clusteringEnabled {
                 self.mapViewController.addMarkersToCluster(markers: [newMarker])
             } else {
-                newMarker.map = gMapView
+                newMarker.map = self.mapViewController.GMapView
             }
 
             self.markers[newMarker.hash.hashValue] = newMarker
@@ -252,10 +243,6 @@ public class Map {
     func addMarkers(markers: [Marker]) throws -> [Int] {
         var markerHashes: [Int] = []
 
-        guard let gMapView = self.mapViewController.GMapView else {
-            return
-        }
-
         DispatchQueue.main.sync {
             var googleMapsMarkers: [GMSMarker] = []
 
@@ -265,7 +252,7 @@ public class Map {
                 if self.mapViewController.clusteringEnabled {
                     googleMapsMarkers.append(newMarker)
                 } else {
-                    newMarker.map = gMapView
+                    newMarker.map = self.mapViewController.GMapView
                 }
 
                 self.markers[newMarker.hash.hashValue] = newMarker
@@ -284,14 +271,10 @@ public class Map {
     func addPolygons(polygons: [Polygon]) throws -> [Int] {
         var polygonHashes: [Int] = []
 
-        guard let gMapView = self.mapViewController.GMapView else {
-            return
-        }
-
         DispatchQueue.main.sync {
             polygons.forEach { polygon in
                 let newPolygon = self.buildPolygon(polygon: polygon)
-                newPolygon.map = gMapView
+                newPolygon.map = self.mapViewController.GMapView
 
                 self.polygons[newPolygon.hash.hashValue] = newPolygon
 
@@ -305,14 +288,10 @@ public class Map {
     func addCircles(circles: [Circle]) throws -> [Int] {
         var circleHashes: [Int] = []
 
-        guard let gMapView = self.mapViewController.GMapView else {
-            return
-        }
-
         DispatchQueue.main.sync {
             circles.forEach { circle in
                 let newCircle = self.buildCircle(circle: circle)
-                newCircle.map = gMapView
+                newCircle.map = self.mapViewController.GMapView
 
                 self.circles[newCircle.hash.hashValue] = newCircle
 
@@ -326,14 +305,10 @@ public class Map {
     func addPolylines(lines: [Polyline]) throws -> [Int] {
         var polylineHashes: [Int] = []
 
-        guard let gMapView = self.mapViewController.GMapView else {
-            return
-        }
-
         DispatchQueue.main.sync {
             lines.forEach { line in
                 let newLine = self.buildPolyline(line: line)
-                newLine.map = gMapView
+                newLine.map = self.mapViewController.GMapView
 
                 self.polylines[newLine.hash.hashValue] = newLine
 
@@ -367,17 +342,13 @@ public class Map {
     }
 
     func disableClustering() {
-        guard let gMapView = self.mapViewController.GMapView else {
-            return
-        }
-
         DispatchQueue.main.sync {
             self.mapViewController.destroyClusterManager()
 
             // add existing markers back to the map
             if !self.markers.isEmpty {
                 for (_, marker) in self.markers {
-                    marker.map = gMapView
+                    marker.map = self.mapViewController.GMapView
                 }
             }
         }
@@ -434,9 +405,9 @@ public class Map {
 
     func setCamera(config: GoogleMapCameraConfig) throws {
         guard let gMapView = self.mapViewController.GMapView else {
-			print("GMapView is nil")
-			return // or handle the nil case appropriately
-		}
+            print("GMapView is nil")
+            return // or handle the nil case appropriately
+        }
 
         let currentCamera = gMapView.camera
 
@@ -453,19 +424,16 @@ public class Map {
             let newCamera = GMSCameraPosition(latitude: lat, longitude: lng, zoom: zoom, bearing: bearing, viewingAngle: angle)
 
             if animate {
-                gMapView.animate(to: newCamera)
+                self.mapViewController.GMapView.animate(to: newCamera)
             } else {
-                gMapView.camera = newCamera
+                self.mapViewController.GMapView.camera = newCamera
             }
         }
 
     }
 
     func getMapType() -> GMSMapViewType {
-        guard let gMapView = self.mapViewController.GMapView else {
-            return .normal // Default to .normal if GMapView is nil
-        }
-        return gMapView.mapType
+        return self.mapViewController.GMapView.mapType
     }
 
     func setMapType(mapType: GMSMapViewType) throws {
@@ -489,39 +457,39 @@ public class Map {
     }
 
     func enableTrafficLayer(enabled: Bool) throws {
-        guard let gMapView = self.mapViewController.GMapView else {
-            return
-        }
         DispatchQueue.main.sync {
-            gMapView.isTrafficEnabled = enabled
+            if let gMapView = self.mapViewController.GMapView {
+                gMapView.isTrafficEnabled = enabled
+            } else {
+                print("Error: GMapView is nil.")
+            }
         }
     }
 
     func enableAccessibilityElements(enabled: Bool) throws {
-        guard let gMapView = self.mapViewController.GMapView else {
-            return
-        }
         DispatchQueue.main.sync {
-            gMapView.accessibilityElementsHidden = enabled
+            if let gMapView = self.mapViewController.GMapView {
+                gMapView.accessibilityElementsHidden = enabled
+            } else {
+                print("Error: GMapView is nil.")
+            }
         }
     }
 
     func enableCurrentLocation(enabled: Bool) throws {
-        guard let gMapView = self.mapViewController.GMapView else {
-            return
-        }
         DispatchQueue.main.sync {
-            gMapView.isMyLocationEnabled = enabled
+            if let gMapView = self.mapViewController.GMapView {
+                gMapView.isMyLocationEnabled = enabled
+            } else {
+                print("Error: GMapView is nil.")
+            }
         }
     }
 
     func setPadding(padding: GoogleMapPadding) throws {
-        guard let gMapView = self.mapViewController.GMapView else {
-            return
-        }
         DispatchQueue.main.sync {
             let mapInsets = UIEdgeInsets(top: CGFloat(padding.top), left: CGFloat(padding.left), bottom: CGFloat(padding.bottom), right: CGFloat(padding.right))
-            gMapView.padding = mapInsets
+            self.mapViewController.GMapView.padding = mapInsets
         }
     }
 
@@ -543,19 +511,13 @@ public class Map {
     }
 
     func getMapLatLngBounds() -> GMSCoordinateBounds? {
-        guard let gMapView = self.mapViewController.GMapView else {
-            return nil
-        }
-        return GMSCoordinateBounds(region: gMapView.projection.visibleRegion())
+        return GMSCoordinateBounds(region: self.mapViewController.GMapView.projection.visibleRegion())
     }
 
     func fitBounds(bounds: GMSCoordinateBounds, padding: CGFloat) {
-        guard let gMapView = self.mapViewController.GMapView else {
-            return
-        }
         DispatchQueue.main.sync {
             let cameraUpdate = GMSCameraUpdate.fit(bounds, withPadding: padding)
-            gMapView.animate(with: cameraUpdate)
+            self.mapViewController.GMapView.animate(with: cameraUpdate)
         }
     }
 
@@ -680,7 +642,7 @@ public class Map {
         }
 
         // If icon (base64) is already set, assign it directly
-		if let base64Icon = marker.icon {
+        if let base64Icon = marker.icon {
 			newMarker.icon = getResizedIcon(base64Icon, marker)
 		}
 		// Otherwise, proceed with the URL or color options
