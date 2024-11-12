@@ -14,6 +14,11 @@ class GMViewController: UIViewController {
     var cameraPosition: [String: Double]!
     var minimumClusterSize: Int?
     var mapId: String?
+	var mapType: GMSMapViewType = .normal {
+		didSet {
+			GMapView?.mapType = mapType
+		}
+	}
 
     private var clusterManager: GMUClusterManager?
 
@@ -93,6 +98,7 @@ public class Map {
         self.delegate = delegate
         self.mapViewController = GMViewController()
         self.mapViewController.mapId = config.mapId
+		self.mapViewController.mapType = config.mapType
 
         self.render()
     }
@@ -121,6 +127,7 @@ public class Map {
                 target.addSubview(self.mapViewController.view)
                 self.mapViewController.GMapView.delegate = self.delegate
             }
+			self.mapViewController.mapType = self.config.mapType
 
             if let styles = self.config.styles {
                 do {

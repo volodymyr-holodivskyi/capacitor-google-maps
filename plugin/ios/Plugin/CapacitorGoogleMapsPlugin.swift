@@ -120,6 +120,7 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
 
             DispatchQueue.main.sync {
                 let newMap = Map(id: id, config: config, delegate: self)
+				newMap.mapViewController.mapType = config.mapType
                 self.maps[id] = newMap
             }
 
