@@ -91,6 +91,7 @@ export interface GoogleMapInterface {
   takeSnapshot(): Promise<{snapshot: string | HTMLElement}>;
   addGroundOverlay(groundOverlayOptions: GroundOverlayArgs): Promise<void>;
   getZoomLevel(): Promise<number | undefined>;
+  hasIcon(iconId: string): Promise<boolean>;
 }
 
 class MapCustomElement extends HTMLElement {
@@ -597,6 +598,13 @@ export class GoogleMap {
   async getZoomLevel(): Promise<{ zoomLevel: number | undefined }> {
     return CapacitorGoogleMaps.getZoomLevel({
       id: this.id
+    })
+  }
+
+  async hasIcon(iconId: string): Promise<{ hasIcon: boolean}> {
+    return CapacitorGoogleMaps.hasIcon({
+      id: this.id,
+      iconId: iconId
     })
   }
 

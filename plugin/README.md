@@ -329,6 +329,7 @@ export default MyMap;
 * [`takeSnapshot()`](#takesnapshot)
 * [`addGroundOverlay(...)`](#addgroundoverlay)
 * [`getZoomLevel()`](#getzoomlevel)
+* [`hasIcon(...)`](#hasicon)
 * [Interfaces](#interfaces)
 * [Type Aliases](#type-aliases)
 * [Enums](#enums)
@@ -954,6 +955,21 @@ getZoomLevel() => Promise<number | undefined>
 ```
 
 **Returns:** <code>Promise&lt;number&gt;</code>
+
+--------------------
+
+
+### hasIcon(...)
+
+```typescript
+hasIcon(iconId: string) => Promise<boolean>
+```
+
+| Param        | Type                |
+| ------------ | ------------------- |
+| **`iconId`** | <code>string</code> |
+
+**Returns:** <code>Promise&lt;boolean&gt;</code>
 
 --------------------
 

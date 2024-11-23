@@ -1059,6 +1059,23 @@ class CapacitorGoogleMapsPlugin : Plugin(), OnMapsSdkInitializedCallback {
         }
     }
 
+    @PluginMethod()
+    fun hasIcon(call: PluginCall) {
+        val id = call.getString("id")
+        id ?: throw InvalidMapIdError()
+
+        val map = maps[id]
+        map ?: throw MapNotFoundError()
+
+        val iconId = call.getString("iconId")
+        iconId ?: throw  InvalidArgumentsError()
+
+        CoroutineScope(Dispatchers.Main).launch {
+            val data = JSObject().put("hasIcon", map.hasIcon(iconId))
+            call.resolve(data)
+        }
+    }
+
     private fun createLatLng(point: JSObject): LatLng {
         return LatLng(
             point.getDouble("lat"),

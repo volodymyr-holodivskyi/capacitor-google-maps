@@ -614,6 +614,10 @@ class CapacitorGoogleMap(
         }
     }
 
+    fun hasIcon(iconId: String): Boolean {
+        return this@CapacitorGoogleMap.markerIcons.contains(iconId);
+    }
+
     fun setCamera(config: GoogleMapCameraConfig, callback: (error: GoogleMapsError?) -> Unit) {
         try {
             googleMap ?: throw GoogleMapNotAvailable()
