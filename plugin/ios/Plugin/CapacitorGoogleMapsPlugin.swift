@@ -185,6 +185,19 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
 
 	let imageCache = NSCache<NSString, UIImage>()
 
+	@objc func hasIcon(_ call: CAPPluginCall) {
+		do {
+			guard let id = call.getString("id") else {
+				throw GoogleMapErrors.invalidArguments("Missing id")
+			}
+
+			call.resolve(imageCache.object(forKey: id as NSString) != nil)
+
+		} catch {
+			handleError(call, error: error)
+		}
+	}
+
 	@objc func cacheMarkerIcon(_ call: CAPPluginCall) {
 		do {
 			guard let id = call.getString("id") else {
@@ -926,7 +939,7 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
 				let image = renderer.image { _ in
 					mapView!.drawHierarchy(in: mapView!.bounds, afterScreenUpdates: true)
 				}
-				
+
 				// Convert the image to PNG data and then to a Base64 string
 				if let imageData = image.pngData() {
 					let base64String = imageData.base64EncodedString()
@@ -939,7 +952,7 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
 			handleError(call, error: error)
 		}
     }
-	
+
 	@objc func addGroundOverlay(_ call: CAPPluginCall) {
 		guard let latitude = call.getDouble("latitude"),
 			  let longitude = call.getDouble("longitude"),
