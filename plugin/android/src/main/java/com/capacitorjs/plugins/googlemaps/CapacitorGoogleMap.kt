@@ -582,7 +582,7 @@ class CapacitorGoogleMap(
                             val bitmapDescriptor = BitmapDescriptorFactory.fromBitmap(result.image)
                             val groundOverlayOptions =
                                 GroundOverlayOptions().image(bitmapDescriptor)
-                                    .position(position, width, height)
+                                    .position(position, result.image.width.toFloat(), result.image.height.toFloat())
                             googleMap!!.addGroundOverlay(groundOverlayOptions)
                         } catch (e: java.lang.Exception) {
                             Log.e("CapacitorGoogleMaps", e.stackTraceToString())
