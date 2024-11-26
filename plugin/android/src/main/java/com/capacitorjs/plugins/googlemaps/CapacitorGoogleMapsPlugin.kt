@@ -992,87 +992,109 @@ class CapacitorGoogleMapsPlugin : Plugin(), OnMapsSdkInitializedCallback {
 
     @PluginMethod()
     fun takeSnapshot(call: PluginCall) {
-        val id = call.getString("id")
-        id ?: throw InvalidMapIdError()
+        try {
+            val id = call.getString("id")
+            id ?: throw InvalidMapIdError()
 
-        val map = maps[id]
-        map ?: throw MapNotFoundError()
+            val map = maps[id]
+            map ?: throw MapNotFoundError()
 
-        CoroutineScope(Dispatchers.Main).launch {
-            map.takeSnapshot { snapshot, error ->
+            CoroutineScope(Dispatchers.Main).launch {
+                map.takeSnapshot { snapshot, error ->
 
-                if(error !== null) {
-                    handleError(call, error)
-                }
+                    if(error !== null) {
+                        handleError(call, error)
+                    }
 
-                if(snapshot.isNotEmpty()) {
-                    val data = JSObject().put("snapshot", snapshot)
-                    call.resolve(data)
+                    if(snapshot.isNotEmpty()) {
+                        val data = JSObject().put("snapshot", snapshot)
+                        call.resolve(data)
+                    }
                 }
             }
+        } catch (e: GoogleMapsError) {
+            handleError(call, e)
+        } catch (e: Exception) {
+            handleError(call, e)
         }
     }
 
     @PluginMethod()
     fun addGroundOverlay(call: PluginCall) {
-        val id = call.getString("id")
-        id ?: throw InvalidMapIdError()
+        try {
+            val id = call.getString("id")
+            id ?: throw InvalidMapIdError()
 
-        val latitude = call.getDouble("latitude")
-        val longitude = call.getDouble("longitude")
-        val width = call.getFloat("width")
-        val height = call.getFloat("height")
-        val imagePath = call.getString("imagePath")
+            val latitude = call.getDouble("latitude")
+            val longitude = call.getDouble("longitude")
+            val width = call.getFloat("width")
+            val height = call.getFloat("height")
+            val imagePath = call.getString("imagePath")
 
-        val map = maps[id]
-        map ?: throw MapNotFoundError()
+            val map = maps[id]
+            map ?: throw MapNotFoundError()
 
-        CoroutineScope(Dispatchers.Main).launch {
-            if (latitude != null && longitude != null && width != null && height !== null && imagePath != null) {
-                map.addGroundOverlay(latitude, longitude, width, height, imagePath)
-                call.resolve()
-            } else {
-                call.reject("Missing parameters")
+            CoroutineScope(Dispatchers.Main).launch {
+                if (latitude != null && longitude != null && width != null && height !== null && imagePath != null) {
+                    map.addGroundOverlay(latitude, longitude, width, height, imagePath)
+                    call.resolve()
+                } else {
+                    call.reject("Missing parameters")
+                }
             }
-
+        } catch (e: GoogleMapsError) {
+            handleError(call, e)
+        } catch (e: Exception) {
+            handleError(call, e)
         }
     }
 
     @PluginMethod()
     fun getZoomLevel(call: PluginCall) {
-        val id = call.getString("id")
-        id ?: throw InvalidMapIdError()
+        try {
+            val id = call.getString("id")
+            id ?: throw InvalidMapIdError()
 
-        val map = maps[id]
-        map ?: throw MapNotFoundError()
+            val map = maps[id]
+            map ?: throw MapNotFoundError()
 
-        CoroutineScope(Dispatchers.Main).launch {
-            map.getZoomLevel { zoomLevel ->
-                if (zoomLevel != null) {
-                    val data = JSObject().put("zoomLevel", zoomLevel)
-                    call.resolve(data)
-                } else {
-                    call.reject("")
+            CoroutineScope(Dispatchers.Main).launch {
+                map.getZoomLevel { zoomLevel ->
+                    if (zoomLevel != null) {
+                        val data = JSObject().put("zoomLevel", zoomLevel)
+                        call.resolve(data)
+                    } else {
+                        call.reject("")
+                    }
                 }
             }
-
+        } catch (e: GoogleMapsError) {
+            handleError(call, e)
+        } catch (e: Exception) {
+            handleError(call, e)
         }
     }
 
     @PluginMethod()
     fun hasIcon(call: PluginCall) {
-        val id = call.getString("id")
-        id ?: throw InvalidMapIdError()
+        try {
+            val id = call.getString("id")
+            id ?: throw InvalidMapIdError()
 
-        val map = maps[id]
-        map ?: throw MapNotFoundError()
+            val map = maps[id]
+            map ?: throw MapNotFoundError()
 
-        val iconId = call.getString("iconId")
-        iconId ?: throw  InvalidArgumentsError()
+            val iconId = call.getString("iconId")
+            iconId ?: throw  InvalidArgumentsError()
 
-        CoroutineScope(Dispatchers.Main).launch {
-            val data = JSObject().put("hasIcon", map.hasIcon(iconId))
-            call.resolve(data)
+            CoroutineScope(Dispatchers.Main).launch {
+                val data = JSObject().put("hasIcon", map.hasIcon(iconId))
+                call.resolve(data)
+            }
+        } catch (e: GoogleMapsError) {
+            handleError(call, e)
+        } catch (e: Exception) {
+            handleError(call, e)
         }
     }
 
