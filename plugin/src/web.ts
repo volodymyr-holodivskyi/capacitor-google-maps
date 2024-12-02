@@ -483,7 +483,9 @@ export class CapacitorGoogleMapsWeb extends WebPlugin implements CapacitorGoogle
   }
 
   async hasIcon(): Promise<{ hasIcon: boolean; }> {
-    throw new Error('Method not supported on web.');
+    return {
+		hasIcon: false
+	}
   }
 
   private getLatLngBounds(_args: LatLngBounds): google.maps.LatLngBounds {

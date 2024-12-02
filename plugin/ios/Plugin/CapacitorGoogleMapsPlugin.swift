@@ -187,11 +187,13 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
 
 	@objc func hasIcon(_ call: CAPPluginCall) {
 		do {
-			guard let id = call.getString("id") else {
-				throw GoogleMapErrors.invalidArguments("Missing id")
+			guard let iconId = call.getString("iconId") else {
+				throw GoogleMapErrors.invalidArguments("Missing iconId")
 			}
 
-			call.resolve(imageCache.object(forKey: id as NSString) != nil)
+			call.resolve({
+				hasIcon: imageCache.object(forKey: iconId as NSString) != nil
+			})
 
 		} catch {
 			handleError(call, error: error)
