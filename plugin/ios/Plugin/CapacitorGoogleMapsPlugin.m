@@ -37,4 +37,5 @@ CAP_PLUGIN(CapacitorGoogleMapsPlugin, "CapacitorGoogleMaps",
    CAP_PLUGIN_METHOD(mapBoundsExtend, CAPPluginReturnPromise);
    CAP_PLUGIN_METHOD(takeSnapshot, CAPPluginReturnPromise);
    CAP_PLUGIN_METHOD(addGroundOverlay, CAPPluginReturnPromise);
+   CAP_PLUGIN_METHOD(hasIcon, CAPPluginReturnPromise);
 )
