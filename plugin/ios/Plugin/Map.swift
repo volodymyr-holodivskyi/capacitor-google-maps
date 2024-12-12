@@ -527,6 +527,34 @@ public class Map {
             self.mapViewController.GMapView.animate(with: cameraUpdate)
         }
     }
+    
+     func addGroundOverlay(overlay: GroundOverlay) throws -> Void {
+        try DispatchQueue.main.sync {
+
+            let newOverlay = self.buildGroundOverlay(overlay: overlay)
+            
+            newOverlay.opacity = 1.0
+            newOverlay.bearing = 0;
+            newOverlay.map = self.mapViewController.GMapView
+        }
+
+        return
+    }
+    
+   private func buildGroundOverlay(overlay: GroundOverlay) -> GMSGroundOverlay {
+        guard let imageUrl = URL(string: overlay.imagePath),
+              let imageData = try? Data(contentsOf: imageUrl),
+              let icon = UIImage(data: imageData) else {
+            print("CapacitorGoogleMaps Warning: could not load image '\(overlay.imagePath)'. Using default overlay icon.")
+            return GMSGroundOverlay()
+        }
+        
+        print("GroundOverlay icon '\(icon)'")
+        
+        let newOverlay = GMSGroundOverlay(bounds: overlay.bounds, icon: icon)
+        
+        return newOverlay
+    }
 
     private func getFrameOverflowBounds(frame: CGRect, mapBounds: CGRect) -> [CGRect] {
         var intersections: [CGRect] = []

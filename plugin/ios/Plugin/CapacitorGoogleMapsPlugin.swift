@@ -956,49 +956,28 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
 		}
     }
 
-	@objc func addGroundOverlay(_ call: CAPPluginCall) {
-		guard let latitude = call.getDouble("latitude"),
-			  let longitude = call.getDouble("longitude"),
-			  let width = call.getFloat("width"),
-			  let height = call.getFloat("height"),
-			  let imagePath = call.getString("imagePath") else {
-			call.reject("Missing required parameters")
-			return
-		}
+	  @objc func addGroundOverlay(_ call: CAPPluginCall) {
+        do {
+            guard let id = call.getString("id") else {
+                throw GoogleMapErrors.invalidMapId
+            }
 
-		// Ensure that mapView exists
-		guard let id = call.getString("id"), let map = maps[id] else {
-			call.reject("MapView not initialized")
-			return
-	   }
+            guard let map = self.maps[id] else {
+                throw GoogleMapErrors.mapNotFound
+            }
 
-	   let mapView = map.mapViewController.GMapView
+            let overlay = try GroundOverlay(call)
 
-		// Create the southwest and northeast coordinates for the overlay bounds
-		let southWestLat = latitude - Double(height) / 200000
-		let southWestLng = longitude - Double(width) / 150000
-		let northEastLat = latitude + Double(height) / 200000
-		let northEastLng = longitude + Double(width) / 150000
+            print("Adding ground overlay for map ID: \(id)")
+            try map.addGroundOverlay(overlay: overlay)
+            print("Ground overlay added for map ID: \(id)")
 
-		let southWest = CLLocationCoordinate2D(latitude: southWestLat, longitude: southWestLng)
-		let northEast = CLLocationCoordinate2D(latitude: northEastLat, longitude: northEastLng)
-		let overlayBounds = GMSCoordinateBounds(coordinate: southWest, coordinate: northEast)
+            call.resolve(["mapId": String(id)])
 
-		// Load the image from the imagePath
-		guard let imageUrl = URL(string: imagePath),
-			  let imageData = try? Data(contentsOf: imageUrl),
-			  let icon = UIImage(data: imageData) else {
-			call.reject("Failed to load image from URL: \(imagePath)")
-			return
-		}
-
-		// Create the GMSGroundOverlay object
-		let groundOverlay = GMSGroundOverlay(bounds: overlayBounds, icon: icon)
-		groundOverlay.bearing = 0 // Adjust the bearing if needed
-		groundOverlay.map = mapView // Add the overlay to the map
-
-		call.resolve()
-	}
+        } catch {
+            handleError(call, error: error)
+        }
+    }
 
     private func getGMSCoordinateBounds(_ bounds: JSObject) throws -> GMSCoordinateBounds {
         guard let southwest = bounds["southwest"] as? JSObject else {
