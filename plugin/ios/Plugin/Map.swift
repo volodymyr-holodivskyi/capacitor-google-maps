@@ -528,10 +528,15 @@ public class Map {
         }
     }
     
-     func addGroundOverlay(overlay: GroundOverlay) throws -> Void {
+    func addGroundOverlay(overlay: GroundOverlay) throws -> Void {
         try DispatchQueue.main.sync {
 
             let newOverlay = self.buildGroundOverlay(overlay: overlay)
+
+            self.mapViewController.GMapView.mapType = .none
+            self.mapViewController.GMapView.backgroundColor = UIColor.clear
+            self.mapViewController.GMapView.isBuildingsEnabled = false
+            self.mapViewController.GMapView.isIndoorEnabled = false
             
             newOverlay.opacity = 1.0
             newOverlay.bearing = 0;
@@ -541,7 +546,7 @@ public class Map {
         return
     }
     
-   private func buildGroundOverlay(overlay: GroundOverlay) -> GMSGroundOverlay {
+    private func buildGroundOverlay(overlay: GroundOverlay) -> GMSGroundOverlay {
         guard let imageUrl = URL(string: overlay.imagePath),
               let imageData = try? Data(contentsOf: imageUrl),
               let icon = UIImage(data: imageData) else {
