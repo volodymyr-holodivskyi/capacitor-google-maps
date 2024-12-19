@@ -246,6 +246,26 @@ public class Map {
 
         return markerHash
     }
+    
+    func addGroundOverlay(overlay: GroundOverlay) throws -> Void {
+        try DispatchQueue.main.sync {
+            guard let newOverlay = overlay.createGroundOverlay() else {
+                print("Error while creating GroundOverlay")
+                return
+            }
+            
+            self.mapViewController.GMapView.mapType = .none
+            self.mapViewController.GMapView.backgroundColor = UIColor.clear
+            self.mapViewController.GMapView.isBuildingsEnabled = false
+            self.mapViewController.GMapView.isIndoorEnabled = false
+            
+            newOverlay.opacity = 1.0
+            newOverlay.bearing = 0;
+            newOverlay.map = self.mapViewController.GMapView
+        }
+
+        return
+    }
 
     func addMarkers(markers: [Marker]) throws -> [Int] {
         var markerHashes: [Int] = []
@@ -526,39 +546,6 @@ public class Map {
             let cameraUpdate = GMSCameraUpdate.fit(bounds, withPadding: padding)
             self.mapViewController.GMapView.animate(with: cameraUpdate)
         }
-    }
-    
-    func addGroundOverlay(overlay: GroundOverlay) throws -> Void {
-        try DispatchQueue.main.sync {
-
-            let newOverlay = self.buildGroundOverlay(overlay: overlay)
-
-            self.mapViewController.GMapView.mapType = .none
-            self.mapViewController.GMapView.backgroundColor = UIColor.clear
-            self.mapViewController.GMapView.isBuildingsEnabled = false
-            self.mapViewController.GMapView.isIndoorEnabled = false
-            
-            newOverlay.opacity = 1.0
-            newOverlay.bearing = 0;
-            newOverlay.map = self.mapViewController.GMapView
-        }
-
-        return
-    }
-    
-    private func buildGroundOverlay(overlay: GroundOverlay) -> GMSGroundOverlay {
-        guard let imageUrl = URL(string: overlay.imagePath),
-              let imageData = try? Data(contentsOf: imageUrl),
-              let icon = UIImage(data: imageData) else {
-            print("CapacitorGoogleMaps Warning: could not load image '\(overlay.imagePath)'. Using default overlay icon.")
-            return GMSGroundOverlay()
-        }
-        
-        print("GroundOverlay icon '\(icon)'")
-        
-        let newOverlay = GMSGroundOverlay(bounds: overlay.bounds, icon: icon)
-        
-        return newOverlay
     }
 
     private func getFrameOverflowBounds(frame: CGRect, mapBounds: CGRect) -> [CGRect] {
