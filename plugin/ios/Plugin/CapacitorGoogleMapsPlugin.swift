@@ -930,30 +930,53 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
     @objc func takeSnapshot(_ call: CAPPluginCall) {
     // Create snapshot options
 		do {
-			guard let id = call.getString("id"), let map = maps[id] else {
-				throw GoogleMapErrors.invalidMapId
-			}
+        // Validate map ID and retrieve the map instance
+        guard let id = call.getString("id"), let map = maps[id] else {
+            throw GoogleMapErrors.invalidMapId
+        }
 
-			// Assuming `map.mapViewController` has a `mapView` property of type GMSMapView
-			let mapView = map.mapViewController.GMapView // Access the GMSMapView instance from your Map object
-			DispatchQueue.main.async {
-				// Render the map view into an image
-				let renderer = UIGraphicsImageRenderer(size: mapView!.bounds.size)
-				let image = renderer.image { _ in
-					mapView!.drawHierarchy(in: mapView!.bounds, afterScreenUpdates: true)
-				}
+        // Get the format from the call, default to "png" if not provided
+        let format = call.getString("format")?.lowercased() ?? "png"
+        let quality = call.getInt("quality") ?? 100 // JPEG quality (0-100), ignored for PNG
 
-				// Convert the image to PNG data and then to a Base64 string
-				if let imageData = image.pngData() {
-					let base64String = imageData.base64EncodedString()
-					call.resolve(["snapshot": base64String])
-				} else {
-					call.reject("Failed to convert image to data")
-				}
-			}
-		} catch {
-			handleError(call, error: error)
-		}
+        // Ensure the mapView exists
+        guard let mapView = map.mapViewController.GMapView else {
+            call.reject("Map view not found")
+            return
+        }
+
+        DispatchQueue.main.async {
+            // Render the map view into an image
+            let renderer = UIGraphicsImageRenderer(size: mapView.bounds.size)
+            let image = renderer.image { _ in
+                mapView.drawHierarchy(in: mapView.bounds, afterScreenUpdates: true)
+            }
+
+            // Convert the image to the desired format
+            var base64String: String?
+            if format == "png" {
+                if let imageData = image.pngData() {
+                    base64String = imageData.base64EncodedString()
+                }
+            } else if format == "jpeg" || format == "jpg" {
+                if let imageData = image.jpegData(compressionQuality: CGFloat(quality) / 100.0) {
+                    base64String = imageData.base64EncodedString()
+                }
+            } else {
+                call.reject("Invalid format: \(format). Supported formats are 'png' and 'jpeg'")
+                return
+            }
+
+            // Return the Base64 string or reject the call if conversion failed
+            if let base64String = base64String {
+                call.resolve(["snapshot": base64String])
+            } else {
+                call.reject("Failed to convert image to \(format) format")
+            }
+        }
+    } catch {
+        handleError(call, error: error)
+    }
     }
 
 	  @objc func addGroundOverlay(_ call: CAPPluginCall) {

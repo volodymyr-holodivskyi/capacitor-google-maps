@@ -2,6 +2,7 @@ package com.capacitorjs.plugins.googlemaps
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
 import android.graphics.RectF
 import android.util.Log
 import android.view.MotionEvent
@@ -17,7 +18,6 @@ import com.google.android.gms.maps.model.LatLngBounds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.jetbrains.annotations.NotNull
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -999,18 +999,35 @@ class CapacitorGoogleMapsPlugin : Plugin(), OnMapsSdkInitializedCallback {
             val map = maps[id]
             map ?: throw MapNotFoundError()
 
+			val formatInt: Bitmap.CompressFormat =
+				when (val format = call.getString("format", "png")!!.lowercase()) {
+					"png" -> Bitmap.CompressFormat.PNG
+					"jpeg" -> Bitmap.CompressFormat.JPEG
+					else -> {
+						Log.w(
+							"CapacitorGoogleMaps",
+							"unknown format '$format'  Defaulting to png."
+						)
+						Bitmap.CompressFormat.PNG
+					}
+				}
+
+			val quality: Int? = call.getInt("quality", 100);
+
             CoroutineScope(Dispatchers.Main).launch {
-                map.takeSnapshot { snapshot, error ->
+				if (quality != null) {
+					map.takeSnapshot(formatInt, quality) { snapshot, error ->
 
-                    if(error !== null) {
-                        handleError(call, error)
-                    }
+						if (error !== null) {
+							handleError(call, error)
+						}
 
-                    if(snapshot.isNotEmpty()) {
-                        val data = JSObject().put("snapshot", snapshot)
-                        call.resolve(data)
-                    }
-                }
+						if (snapshot.isNotEmpty()) {
+							val data = JSObject().put("snapshot", snapshot)
+							call.resolve(data)
+						}
+					}
+				}
             }
         } catch (e: GoogleMapsError) {
             handleError(call, e)

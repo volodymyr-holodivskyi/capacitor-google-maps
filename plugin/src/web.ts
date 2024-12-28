@@ -467,7 +467,7 @@ export class CapacitorGoogleMapsWeb extends WebPlugin implements CapacitorGoogle
     return { bounds: result };
   }
 
-  async takeSnapshot(_args: { id: string; }): Promise<{ snapshot: string | HTMLElement }> {
+  async takeSnapshot(_args: { id: string; format?: string; quality?: number  }): Promise<{ snapshot: string | HTMLElement }> {
       const snapshot = this.maps[_args.id].map.getDiv();
       return {snapshot: snapshot};
   }

@@ -1,8 +1,8 @@
 package com.capacitorjs.plugins.googlemaps
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.graphics.*
+import android.graphics.Bitmap.CompressFormat
 import android.location.Location
 import android.util.Base64
 import android.util.Log
@@ -21,8 +21,6 @@ import com.google.maps.android.clustering.ClusterManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import java.io.ByteArrayOutputStream
-import java.io.InputStream
-import java.net.URL
 
 
 class CapacitorGoogleMap(
@@ -529,14 +527,18 @@ class CapacitorGoogleMap(
         }
     }
 
-    fun takeSnapshot(callback: (result: String, error: GoogleMapsError?) -> Unit) {
+    fun takeSnapshot(
+		format: CompressFormat,
+		quality: Int,
+		callback: (result: String, error: GoogleMapsError?) -> Unit
+	) {
         try {
             googleMap ?: throw GoogleMapNotAvailable()
 
             googleMap!!.snapshot { bitmap ->
                 try {
                     if (bitmap !== null) {
-                        val base64Image = bitmapToBase64(bitmap)
+                        val base64Image = bitmapToBase64(bitmap, format, quality)
                         callback(base64Image, null)
                     }
                 } catch (e: GoogleMapsError) {
@@ -550,9 +552,9 @@ class CapacitorGoogleMap(
 
     }
 
-    private fun bitmapToBase64(bitmap: Bitmap): String {
+    private fun bitmapToBase64(bitmap: Bitmap, format: Bitmap.CompressFormat = Bitmap.CompressFormat.PNG, quality: Int = 100): String {
         val outputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+        bitmap.compress(format, quality, outputStream)
         val byteArray = outputStream.toByteArray()
         return Base64.encodeToString(byteArray, Base64.NO_WRAP)
     }

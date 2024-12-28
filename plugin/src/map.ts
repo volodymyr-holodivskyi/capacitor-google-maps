@@ -88,7 +88,7 @@ export interface GoogleMapInterface {
   setOnMapDoubleClickListener(callback?: MapListenerCallback<MapClickCallbackData>): Promise<void>;
   setOnMapLoadedListener(callback?: MapListenerCallback<{id: string}>): Promise<void>;
   setOnZoomChangedListener(callback?: MapListenerCallback<{zoomLevel: number | undefined}>): Promise<void>;
-  takeSnapshot(): Promise<{snapshot: string | HTMLElement}>;
+  takeSnapshot(format?: string, quality?: number): Promise<{snapshot: string | HTMLElement}>;
   addGroundOverlay(groundOverlayOptions: GroundOverlayArgs): Promise<void>;
   getZoomLevel(): Promise<number | undefined>;
   hasIcon(iconId: string): Promise<boolean>;
@@ -578,9 +578,11 @@ export class GoogleMap {
     );
   }
 
-  async takeSnapshot(): Promise<{snapshot: string | HTMLElement}> {
+  async takeSnapshot(format?: string, quality?: number): Promise<{snapshot: string | HTMLElement}> {
     return CapacitorGoogleMaps.takeSnapshot({
-      id: this.id
+      id: this.id,
+      format,
+      quality
     })
   }
 

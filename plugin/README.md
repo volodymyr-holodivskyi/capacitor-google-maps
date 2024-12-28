@@ -326,7 +326,7 @@ export default MyMap;
 * [`setOnMapDoubleClickListener(...)`](#setonmapdoubleclicklistener)
 * [`setOnMapLoadedListener(...)`](#setonmaploadedlistener)
 * [`setOnZoomChangedListener(...)`](#setonzoomchangedlistener)
-* [`takeSnapshot()`](#takesnapshot)
+* [`takeSnapshot(...)`](#takesnapshot)
 * [`addGroundOverlay(...)`](#addgroundoverlay)
 * [`getZoomLevel()`](#getzoomlevel)
 * [`hasIcon(...)`](#hasicon)
@@ -924,11 +924,16 @@ setOnZoomChangedListener(callback?: MapListenerCallback<{ zoomLevel: number | un
 --------------------
 
 
-### takeSnapshot()
+### takeSnapshot(...)
 
 ```typescript
-takeSnapshot() => Promise<{ snapshot: string | HTMLElement; }>
+takeSnapshot(format?: string | undefined, quality?: number | undefined) => Promise<{ snapshot: string | HTMLElement; }>
 ```
+
+| Param         | Type                |
+| ------------- | ------------------- |
+| **`format`**  | <code>string</code> |
+| **`quality`** | <code>number</code> |
 
 **Returns:** <code>Promise&lt;{ snapshot: any; }&gt;</code>
 

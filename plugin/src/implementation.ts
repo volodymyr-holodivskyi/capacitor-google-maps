@@ -210,7 +210,7 @@ export interface CapacitorGoogleMapsPlugin extends Plugin {
   fitBounds(args: FitBoundsArgs): Promise<void>;
   mapBoundsContains(args: MapBoundsContainsArgs): Promise<{ contains: boolean }>;
   mapBoundsExtend(args: MapBoundsExtendArgs): Promise<{ bounds: LatLngBounds }>;
-  takeSnapshot(args: { id: string }): Promise<{ snapshot: string | HTMLElement }>;
+  takeSnapshot(args: { id: string, format?: string, quality?: number }): Promise<{ snapshot: string | HTMLElement }>;
   addGroundOverlay(args: GroundOverlayArgs & {id: string}): Promise<void>;
   getZoomLevel(args: { id: string }): Promise<{ zoomLevel: number | undefined }>;
   hasIcon(args: { id: string, iconId: string }): Promise<{ hasIcon: boolean}>;
