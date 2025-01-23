@@ -369,7 +369,8 @@ class CapacitorGoogleMap(
 
                 // add existing markers to the cluster
                 if (markers.isNotEmpty()) {
-                    for ((_, marker) in markers) {
+                    val copyMap = HashMap(markers);
+                    for ((_, marker) in copyMap) {
                         marker.googleMapMarker?.remove()
                         // marker.googleMapMarker = null
                     }
@@ -398,7 +399,8 @@ class CapacitorGoogleMap(
 
                 // add existing markers back to the map
                 if (markers.isNotEmpty()) {
-                    for ((_, marker) in markers) {
+                    val copyMap = HashMap(markers);
+                    for ((_, marker) in copyMap) {
                         val markerOptions: Deferred<MarkerOptions> =
                             CoroutineScope(Dispatchers.IO).async {
                                 this@CapacitorGoogleMap.buildMarker(marker)
