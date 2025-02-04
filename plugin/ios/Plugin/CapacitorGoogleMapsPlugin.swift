@@ -991,9 +991,7 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
 
             let overlay = try GroundOverlay(call)
 
-            print("Adding ground overlay for map ID: \(id)")
             try map.addGroundOverlay(overlay: overlay)
-            print("Ground overlay added for map ID: \(id)")
 
             call.resolve(["mapId": String(id)])
 
@@ -1126,6 +1124,10 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
 
         self.notifyListeners("onBoundsChanged", data: data)
         self.notifyListeners("onCameraIdle", data: data)
+
+        if let map = map {
+            _updateVisibleMarkers(mapView: mapView, map: map)
+        }
     }
 
     // onCameraMoveStarted
@@ -1296,6 +1298,45 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
             "longitude": location.longitude
         ])
     }
+    
+    private func _updateVisibleMarkers(mapView: GMSMapView, map: Map) {
+        if (map.mapViewController.clusteringEnabled) {
+            return
+        }
+        
+        let visibleRegion = mapView.projection.visibleRegion()
+            
+        let bounds = GMSCoordinateBounds(
+            coordinate: visibleRegion.farLeft,
+            coordinate: visibleRegion.farRight
+        ).includingCoordinate(visibleRegion.nearLeft)
+         .includingCoordinate(visibleRegion.nearRight)
+
+        if let center = bounds.center() {
+            let expandedBounds = _expandBounds(bounds: bounds, center: center, factor: 2.0)
+            
+            for (_, marker) in map.markers {
+                marker.map = expandedBounds.contains(marker.position) ? mapView : nil
+            }
+        }
+    }
+    
+    private func _expandBounds(bounds: GMSCoordinateBounds, center: CLLocationCoordinate2D, factor: Double) -> GMSCoordinateBounds {
+        let northEast = bounds.northEast
+        let southWest = bounds.southWest
+        
+        let newNorthEast = CLLocationCoordinate2D(
+            latitude: center.latitude + (northEast.latitude - center.latitude) * factor,
+            longitude: center.longitude + (northEast.longitude - center.longitude) * factor
+        )
+        
+        let newSouthWest = CLLocationCoordinate2D(
+            latitude: center.latitude + (southWest.latitude - center.latitude) * factor,
+            longitude: center.longitude + (southWest.longitude - center.longitude) * factor
+        )
+
+        return GMSCoordinateBounds(coordinate: newNorthEast, coordinate: newSouthWest)
+    }
 }
 
 // snippet from https://www.hackingwithswift.com/example-code/uicolor/how-to-convert-a-hex-color-to-a-uicolor
@@ -1332,5 +1373,16 @@ extension UIColor {
         }
 
         return nil
+    }
+}
+
+extension GMSCoordinateBounds {
+    func center() -> CLLocationCoordinate2D? {
+        let northEast = self.northEast
+        let southWest = self.southWest
+        return CLLocationCoordinate2D(
+            latitude: (northEast.latitude + southWest.latitude) / 2,
+            longitude: (northEast.longitude + southWest.longitude) / 2
+        )
     }
 }
