@@ -1,6 +1,6 @@
 {
   "name": "vholodivskiy-capacitor-google-maps",
-  "version": "5.3.1",
+  "version": "5.3.2",
   "description": "Fork of Ionic Team Capacitor Google Maps",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
