@@ -288,6 +288,8 @@ export default MyMap;
 * [`disableClustering()`](#disableclustering)
 * [`addMarker(...)`](#addmarker)
 * [`addMarkers(...)`](#addmarkers)
+* [`updateMarker(...)`](#updatemarker)
+* [`updateMarkerIcon(...)`](#updatemarkericon)
 * [`removeMarker(...)`](#removemarker)
 * [`removeMarkers(...)`](#removemarkers)
 * [`addPolygons(...)`](#addpolygons)
@@ -421,6 +423,37 @@ addMarkers(markers: Marker[]) => Promise<string[]>
 | **`markers`** | <code>Marker[]</code> |
 
 **Returns:** <code>Promise&lt;string[]&gt;</code>
+
+--------------------
+
+
+### updateMarker(...)
+
+```typescript
+updateMarker(id: string, marker: Marker) => Promise<string>
+```
+
+| Param        | Type                                      |
+| ------------ | ----------------------------------------- |
+| **`id`**     | <code>string</code>                       |
+| **`marker`** | <code><a href="#marker">Marker</a></code> |
+
+**Returns:** <code>Promise&lt;string&gt;</code>
+
+--------------------
+
+
+### updateMarkerIcon(...)
+
+```typescript
+updateMarkerIcon(id: string, iconId: string, iconUrl: string) => Promise<void>
+```
+
+| Param         | Type                |
+| ------------- | ------------------- |
+| **`id`**      | <code>string</code> |
+| **`iconId`**  | <code>string</code> |
+| **`iconUrl`** | <code>string</code> |
 
 --------------------
 

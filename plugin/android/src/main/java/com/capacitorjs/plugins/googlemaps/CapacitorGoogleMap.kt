@@ -529,6 +529,53 @@ class CapacitorGoogleMap(
         }
     }
 
+    fun updateMarker(id: String, marker: CapacitorGoogleMapMarker, callback: (result: Result<String>) -> Unit) {
+        try {
+            googleMap ?: throw GoogleMapNotAvailable()
+
+            this.removeMarker(id) { err ->
+                if (err != null) {
+                    throw err
+                }
+
+                this.addMarker(marker, callback);
+            }
+
+        } catch (e: GoogleMapsError) {
+        }
+    }
+
+    fun updateMarkerIcon(id: String, iconId: String, iconUrl: String) {
+        try {
+            googleMap ?: throw GoogleMapNotAvailable()
+
+            val marker = markers[id]
+            marker ?: throw MarkerNotFoundError()
+
+            if (!iconId.isNullOrEmpty()) {
+                if (this.markerIcons.contains(iconId)) {
+                    val cachedBitmap = this.markerIcons[iconId]
+                    marker.googleMapMarker?.setIcon(cachedBitmap?.let { getResizedIcon(it, marker) })
+                } else {
+                    val base64Data = iconUrl!!.substringAfter("base64,", "")
+
+                    // Check if Data URL has a valid base64 part
+                    if (base64Data.isNotEmpty()) {
+                        // Decode the Base64 string into a Bitmap
+                        val decodedString = Base64.decode(base64Data, Base64.DEFAULT)
+                        val bitmap =
+                            BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
+
+                        marker.googleMapMarker?.setIcon(getResizedIcon(bitmap, marker))
+
+                        this.markerIcons[iconId] = bitmap
+                    }
+                }
+            }
+        } catch (e: GoogleMapsError) {
+        }
+    }
+
     fun takeSnapshot(
 		format: CompressFormat,
 		quality: Int,

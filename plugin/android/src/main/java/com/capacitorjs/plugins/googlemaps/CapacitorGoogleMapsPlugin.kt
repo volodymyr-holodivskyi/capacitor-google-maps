@@ -632,6 +632,67 @@ class CapacitorGoogleMapsPlugin : Plugin(), OnMapsSdkInitializedCallback {
     }
 
     @PluginMethod
+    fun updateMarker(call: PluginCall) {
+        try {
+            val id = call.getString("id")
+            id ?: throw InvalidMapIdError()
+
+            val markerId = call.getString("markerId")
+            markerId ?: throw InvalidArgumentsError("markerId is invalid or missing")
+
+            val markerObj = call.getObject("marker", null)
+            markerObj ?: throw InvalidArgumentsError("marker object is missing")
+
+            val map = maps[id]
+            map ?: throw MapNotFoundError()
+
+            val marker = CapacitorGoogleMapMarker(markerObj)
+            map.updateMarker(markerId, marker) { result ->
+                val markerId = result.getOrThrow()
+
+                val res = JSObject()
+                res.put("id", markerId)
+                call.resolve(res)
+            }
+        } catch (e: GoogleMapsError) {
+            handleError(call, e)
+        } catch (e: Exception) {
+            handleError(call, e)
+        }
+    }
+
+    @PluginMethod
+    fun updateMarkerIcon(call: PluginCall) {
+        try {
+            val id = call.getString("id")
+            id ?: throw InvalidMapIdError()
+
+            val markerId = call.getString("markerId")
+            markerId ?: throw InvalidArgumentsError("markerId is invalid or missing")
+
+            val iconId = call.getString("iconId")
+            iconId ?: throw InvalidArgumentsError("iconId is invalid or missing")
+
+            val iconUrl = call.getString("iconUrl")
+            iconUrl ?: throw InvalidArgumentsError("iconUrl is invalid or missing")
+
+            val map = maps[id]
+            map ?: throw MapNotFoundError()
+
+            CoroutineScope(Dispatchers.Main).launch {
+                map.updateMarkerIcon(markerId, iconId, iconUrl)
+
+                call.resolve()
+            }
+        } catch (e: GoogleMapsError) {
+            handleError(call, e)
+        } catch (e: Exception) {
+            handleError(call, e)
+        }
+    }
+
+
+    @PluginMethod
     fun setCamera(call: PluginCall) {
         try {
             val id = call.getString("id")

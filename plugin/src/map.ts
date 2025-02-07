@@ -37,6 +37,8 @@ export interface GoogleMapInterface {
   disableClustering(): Promise<void>;
   addMarker(marker: Marker): Promise<string>;
   addMarkers(markers: Marker[]): Promise<string[]>;
+  updateMarker(id: string, marker: Marker): Promise<string>;
+  updateMarkerIcon(id: string, iconId: string, iconUrl: string): Promise<void>;
   removeMarker(id: string): Promise<void>;
   removeMarkers(ids: string[]): Promise<void>;
   addPolygons(polygons: Polygon[]): Promise<string[]>;
@@ -372,6 +374,25 @@ export class GoogleMap {
     });
 
     return res.ids;
+  }
+
+  async updateMarker(id: string, marker: Marker): Promise<string> {
+    const res = await CapacitorGoogleMaps.updateMarker({
+      id: this.id,
+      markerId: id,
+      marker,
+    });
+
+    return res.id;
+  }
+
+  async updateMarkerIcon(id: string, iconId: string, iconUrl: string): Promise<void> {
+    return CapacitorGoogleMaps.updateMarkerIcon({
+      id: this.id,
+      markerId: id,
+      iconId,
+      iconUrl
+    });
   }
 
   /**

@@ -28,6 +28,8 @@ import type {
   AddPolylinesArgs,
   RemovePolylinesArgs,
   GroundOverlayArgs,
+  UpdateMarkerArgs,
+  UpdateMarkerIconArgs,
 } from './implementation';
 
 export class CapacitorGoogleMapsWeb extends WebPlugin implements CapacitorGoogleMapsPlugin {
@@ -282,6 +284,32 @@ export class CapacitorGoogleMapsWeb extends WebPlugin implements CapacitorGoogle
     return { id: id };
   }
 
+  async updateMarker(args: UpdateMarkerArgs): Promise<{ id: string; }> {
+    await this.removeMarker({
+      id: args.id,
+      markerId: args.markerId
+    });
+
+    return (await this.addMarker({id: args.id, marker: args.marker}));
+  }
+
+  async updateMarkerIcon(args: UpdateMarkerIconArgs): Promise<void> {
+    const marker = this.maps[args.id].markers[args.markerId];
+
+    if (marker) {
+      let iconImage: google.maps.Icon | undefined = undefined;
+      
+      iconImage = {
+        url: args.iconUrl,
+        scaledSize: (marker.getIcon() as google.maps.Icon).size,
+        anchor: (marker.getIcon() as google.maps.Icon).anchor,
+        origin: (marker.getIcon() as google.maps.Icon).origin
+      };
+    
+      marker.setIcon(iconImage);
+    }
+  }
+
   async removeMarkers(_args: RemoveMarkersArgs): Promise<void> {
     const map = this.maps[_args.id];
 
@@ -468,8 +496,8 @@ export class CapacitorGoogleMapsWeb extends WebPlugin implements CapacitorGoogle
   }
 
   async takeSnapshot(_args: { id: string; format?: string; quality?: number  }): Promise<{ snapshot: string | HTMLElement }> {
-      const snapshot = this.maps[_args.id].map.getDiv();
-      return {snapshot: snapshot};
+    const snapshot = this.maps[_args.id].map.getDiv();
+    return {snapshot: snapshot};
   }
 
   async addGroundOverlay(_args: GroundOverlayArgs): Promise<void> {
@@ -484,8 +512,8 @@ export class CapacitorGoogleMapsWeb extends WebPlugin implements CapacitorGoogle
 
   async hasIcon(): Promise<{ hasIcon: boolean; }> {
     return {
-		hasIcon: false
-	}
+      hasIcon: false
+    };
   }
 
   private getLatLngBounds(_args: LatLngBounds): google.maps.LatLngBounds {
@@ -627,8 +655,8 @@ export class CapacitorGoogleMapsWeb extends WebPlugin implements CapacitorGoogle
       this.notifyListeners('onZoomChanged', {
         mapId: mapId,
         zoom: map.getZoom()
-      })
-    })
+      });
+    });
 
     this.notifyListeners('onMapReady', {
       mapId: mapId,
