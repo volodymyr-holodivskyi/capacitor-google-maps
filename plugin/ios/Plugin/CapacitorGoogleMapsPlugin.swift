@@ -1335,7 +1335,11 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
             longitude: center.longitude + (southWest.longitude - center.longitude) * factor
         )
 
-        return GMSCoordinateBounds(coordinate: newNorthEast, coordinate: newSouthWest)
+        if (abs(newNorthEast.latitude) >= 90) {
+            return bounds
+        } else {
+            return GMSCoordinateBounds(coordinate: newNorthEast, coordinate: newSouthWest)
+        }
     }
 }
 
