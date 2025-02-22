@@ -37,6 +37,8 @@ export interface GoogleMapInterface {
   disableClustering(): Promise<void>;
   addMarker(marker: Marker): Promise<string>;
   addMarkers(markers: Marker[]): Promise<string[]>;
+  updateMarker(id: string, marker: Marker): Promise<string>;
+  updateMarkerIcon(id: string, iconId: string, iconUrl: string): Promise<void>;
   removeMarker(id: string): Promise<void>;
   removeMarkers(ids: string[]): Promise<void>;
   addPolygons(polygons: Polygon[]): Promise<string[]>;
@@ -88,7 +90,7 @@ export interface GoogleMapInterface {
   setOnMapDoubleClickListener(callback?: MapListenerCallback<MapClickCallbackData>): Promise<void>;
   setOnMapLoadedListener(callback?: MapListenerCallback<{id: string}>): Promise<void>;
   setOnZoomChangedListener(callback?: MapListenerCallback<{zoomLevel: number | undefined}>): Promise<void>;
-  takeSnapshot(): Promise<{snapshot: string | HTMLElement}>;
+  takeSnapshot(format?: string, quality?: number): Promise<{snapshot: string | HTMLElement}>;
   addGroundOverlay(groundOverlayOptions: GroundOverlayArgs): Promise<void>;
   getZoomLevel(): Promise<number | undefined>;
   hasIcon(iconId: string): Promise<boolean>;
@@ -374,6 +376,25 @@ export class GoogleMap {
     return res.ids;
   }
 
+  async updateMarker(id: string, marker: Marker): Promise<string> {
+    const res = await CapacitorGoogleMaps.updateMarker({
+      id: this.id,
+      markerId: id,
+      marker,
+    });
+
+    return res.id;
+  }
+
+  async updateMarkerIcon(id: string, iconId: string, iconUrl: string): Promise<void> {
+    return CapacitorGoogleMaps.updateMarkerIcon({
+      id: this.id,
+      markerId: id,
+      iconId,
+      iconUrl
+    });
+  }
+
   /**
    * Remove marker from the map
    *
@@ -578,9 +599,11 @@ export class GoogleMap {
     );
   }
 
-  async takeSnapshot(): Promise<{snapshot: string | HTMLElement}> {
+  async takeSnapshot(format?: string, quality?: number): Promise<{snapshot: string | HTMLElement}> {
     return CapacitorGoogleMaps.takeSnapshot({
-      id: this.id
+      id: this.id,
+      format,
+      quality
     })
   }
 

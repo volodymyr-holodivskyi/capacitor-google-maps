@@ -930,30 +930,53 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
     @objc func takeSnapshot(_ call: CAPPluginCall) {
     // Create snapshot options
 		do {
-			guard let id = call.getString("id"), let map = maps[id] else {
-				throw GoogleMapErrors.invalidMapId
-			}
+        // Validate map ID and retrieve the map instance
+        guard let id = call.getString("id"), let map = maps[id] else {
+            throw GoogleMapErrors.invalidMapId
+        }
 
-			// Assuming `map.mapViewController` has a `mapView` property of type GMSMapView
-			let mapView = map.mapViewController.GMapView // Access the GMSMapView instance from your Map object
-			DispatchQueue.main.async {
-				// Render the map view into an image
-				let renderer = UIGraphicsImageRenderer(size: mapView!.bounds.size)
-				let image = renderer.image { _ in
-					mapView!.drawHierarchy(in: mapView!.bounds, afterScreenUpdates: true)
-				}
+        // Get the format from the call, default to "png" if not provided
+        let format = call.getString("format")?.lowercased() ?? "png"
+        let quality = call.getInt("quality") ?? 100 // JPEG quality (0-100), ignored for PNG
 
-				// Convert the image to PNG data and then to a Base64 string
-				if let imageData = image.pngData() {
-					let base64String = imageData.base64EncodedString()
-					call.resolve(["snapshot": base64String])
-				} else {
-					call.reject("Failed to convert image to data")
-				}
-			}
-		} catch {
-			handleError(call, error: error)
-		}
+        // Ensure the mapView exists
+        guard let mapView = map.mapViewController.GMapView else {
+            call.reject("Map view not found")
+            return
+        }
+
+        DispatchQueue.main.async {
+            // Render the map view into an image
+            let renderer = UIGraphicsImageRenderer(size: mapView.bounds.size)
+            let image = renderer.image { _ in
+                mapView.drawHierarchy(in: mapView.bounds, afterScreenUpdates: true)
+            }
+
+            // Convert the image to the desired format
+            var base64String: String?
+            if format == "png" {
+                if let imageData = image.pngData() {
+                    base64String = imageData.base64EncodedString()
+                }
+            } else if format == "jpeg" || format == "jpg" {
+                if let imageData = image.jpegData(compressionQuality: CGFloat(quality) / 100.0) {
+                    base64String = imageData.base64EncodedString()
+                }
+            } else {
+                call.reject("Invalid format: \(format). Supported formats are 'png' and 'jpeg'")
+                return
+            }
+
+            // Return the Base64 string or reject the call if conversion failed
+            if let base64String = base64String {
+                call.resolve(["snapshot": base64String])
+            } else {
+                call.reject("Failed to convert image to \(format) format")
+            }
+        }
+    } catch {
+        handleError(call, error: error)
+    }
     }
 
 	  @objc func addGroundOverlay(_ call: CAPPluginCall) {
@@ -968,9 +991,7 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
 
             let overlay = try GroundOverlay(call)
 
-            print("Adding ground overlay for map ID: \(id)")
             try map.addGroundOverlay(overlay: overlay)
-            print("Ground overlay added for map ID: \(id)")
 
             call.resolve(["mapId": String(id)])
 
@@ -1103,6 +1124,10 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
 
         self.notifyListeners("onBoundsChanged", data: data)
         self.notifyListeners("onCameraIdle", data: data)
+
+        if let map = map {
+            _updateVisibleMarkers(mapView: mapView, map: map)
+        }
     }
 
     // onCameraMoveStarted
@@ -1273,6 +1298,49 @@ public class CapacitorGoogleMapsPlugin: CAPPlugin, GMSMapViewDelegate {
             "longitude": location.longitude
         ])
     }
+    
+    private func _updateVisibleMarkers(mapView: GMSMapView, map: Map) {
+        if (map.mapViewController.clusteringEnabled) {
+            return
+        }
+        
+        let visibleRegion = mapView.projection.visibleRegion()
+            
+        let bounds = GMSCoordinateBounds(
+            coordinate: visibleRegion.farLeft,
+            coordinate: visibleRegion.farRight
+        ).includingCoordinate(visibleRegion.nearLeft)
+         .includingCoordinate(visibleRegion.nearRight)
+
+        if let center = bounds.center() {
+            let expandedBounds = _expandBounds(bounds: bounds, center: center, factor: 2.0)
+            
+            for (_, marker) in map.markers {
+                marker.map = expandedBounds.contains(marker.position) ? mapView : nil
+            }
+        }
+    }
+    
+    private func _expandBounds(bounds: GMSCoordinateBounds, center: CLLocationCoordinate2D, factor: Double) -> GMSCoordinateBounds {
+        let northEast = bounds.northEast
+        let southWest = bounds.southWest
+        
+        let newNorthEast = CLLocationCoordinate2D(
+            latitude: center.latitude + (northEast.latitude - center.latitude) * factor,
+            longitude: center.longitude + (northEast.longitude - center.longitude) * factor
+        )
+        
+        let newSouthWest = CLLocationCoordinate2D(
+            latitude: center.latitude + (southWest.latitude - center.latitude) * factor,
+            longitude: center.longitude + (southWest.longitude - center.longitude) * factor
+        )
+
+        if (abs(newNorthEast.latitude) >= 90) {
+            return bounds
+        } else {
+            return GMSCoordinateBounds(coordinate: newNorthEast, coordinate: newSouthWest)
+        }
+    }
 }
 
 // snippet from https://www.hackingwithswift.com/example-code/uicolor/how-to-convert-a-hex-color-to-a-uicolor
@@ -1309,5 +1377,16 @@ extension UIColor {
         }
 
         return nil
+    }
+}
+
+extension GMSCoordinateBounds {
+    func center() -> CLLocationCoordinate2D? {
+        let northEast = self.northEast
+        let southWest = self.southWest
+        return CLLocationCoordinate2D(
+            latitude: (northEast.latitude + southWest.latitude) / 2,
+            longitude: (northEast.longitude + southWest.longitude) / 2
+        )
     }
 }

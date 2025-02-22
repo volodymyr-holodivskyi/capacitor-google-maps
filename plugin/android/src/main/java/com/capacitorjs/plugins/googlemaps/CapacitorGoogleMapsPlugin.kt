@@ -2,6 +2,7 @@ package com.capacitorjs.plugins.googlemaps
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
 import android.graphics.RectF
 import android.util.Log
 import android.view.MotionEvent
@@ -17,7 +18,6 @@ import com.google.android.gms.maps.model.LatLngBounds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.jetbrains.annotations.NotNull
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -50,6 +50,9 @@ class CapacitorGoogleMapsPlugin : Plugin(), OnMapsSdkInitializedCallback {
 
         this.bridge.webView.setOnTouchListener(
                 object : View.OnTouchListener {
+                    private var touchStartX: Float = -1f
+                    private var touchStartY: Float = -1f
+                    private var touchStartedInsideMap: Boolean = false
                     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
                         if (event != null) {
                             if (event.source == -1) {
@@ -58,6 +61,34 @@ class CapacitorGoogleMapsPlugin : Plugin(), OnMapsSdkInitializedCallback {
 
                             val touchX = event.x
                             val touchY = event.y
+
+                            when (event.action) {
+                                MotionEvent.ACTION_DOWN -> {
+                                    // Store initial touch position
+                                    touchStartX = touchX
+                                    touchStartY = touchY
+                                    touchStartedInsideMap = false
+
+                                    // Check if touch started inside any map
+                                    for ((id, map) in maps) {
+                                        if (touchEnabled[id] == false) continue
+                                        val mapRect = map.getMapBounds()
+
+                                        if (mapRect.contains(touchStartX.toInt(), touchStartY.toInt())) {
+                                            touchStartedInsideMap = true
+                                            break
+                                        }
+                                    }
+
+                                    Log.d("GoogleMapsPlugin", "Touch start position: ($touchStartX, $touchStartY), inside map: $touchStartedInsideMap")
+                                }
+                                MotionEvent.ACTION_MOVE, MotionEvent.ACTION_UP -> {
+                                    if (!touchStartedInsideMap) {
+                                        Log.d("GoogleMapsPlugin", "Blocking touch event since it started outside the map.")
+                                        return v?.onTouchEvent(event) ?: true // Allow normal app handling, ignore map touch
+                                    }
+                                }
+                            }
 
                             for ((id, map) in maps) {
                                 if (touchEnabled[id] == false) {
@@ -632,6 +663,67 @@ class CapacitorGoogleMapsPlugin : Plugin(), OnMapsSdkInitializedCallback {
     }
 
     @PluginMethod
+    fun updateMarker(call: PluginCall) {
+        try {
+            val id = call.getString("id")
+            id ?: throw InvalidMapIdError()
+
+            val markerId = call.getString("markerId")
+            markerId ?: throw InvalidArgumentsError("markerId is invalid or missing")
+
+            val markerObj = call.getObject("marker", null)
+            markerObj ?: throw InvalidArgumentsError("marker object is missing")
+
+            val map = maps[id]
+            map ?: throw MapNotFoundError()
+
+            val marker = CapacitorGoogleMapMarker(markerObj)
+            map.updateMarker(markerId, marker) { result ->
+                val markerId = result.getOrThrow()
+
+                val res = JSObject()
+                res.put("id", markerId)
+                call.resolve(res)
+            }
+        } catch (e: GoogleMapsError) {
+            handleError(call, e)
+        } catch (e: Exception) {
+            handleError(call, e)
+        }
+    }
+
+    @PluginMethod
+    fun updateMarkerIcon(call: PluginCall) {
+        try {
+            val id = call.getString("id")
+            id ?: throw InvalidMapIdError()
+
+            val markerId = call.getString("markerId")
+            markerId ?: throw InvalidArgumentsError("markerId is invalid or missing")
+
+            val iconId = call.getString("iconId")
+            iconId ?: throw InvalidArgumentsError("iconId is invalid or missing")
+
+            val iconUrl = call.getString("iconUrl")
+            iconUrl ?: throw InvalidArgumentsError("iconUrl is invalid or missing")
+
+            val map = maps[id]
+            map ?: throw MapNotFoundError()
+
+            CoroutineScope(Dispatchers.Main).launch {
+                map.updateMarkerIcon(markerId, iconId, iconUrl)
+
+                call.resolve()
+            }
+        } catch (e: GoogleMapsError) {
+            handleError(call, e)
+        } catch (e: Exception) {
+            handleError(call, e)
+        }
+    }
+
+
+    @PluginMethod
     fun setCamera(call: PluginCall) {
         try {
             val id = call.getString("id")
@@ -999,18 +1091,35 @@ class CapacitorGoogleMapsPlugin : Plugin(), OnMapsSdkInitializedCallback {
             val map = maps[id]
             map ?: throw MapNotFoundError()
 
+			val formatInt: Bitmap.CompressFormat =
+				when (val format = call.getString("format", "png")!!.lowercase()) {
+					"png" -> Bitmap.CompressFormat.PNG
+					"jpeg" -> Bitmap.CompressFormat.JPEG
+					else -> {
+						Log.w(
+							"CapacitorGoogleMaps",
+							"unknown format '$format'  Defaulting to png."
+						)
+						Bitmap.CompressFormat.PNG
+					}
+				}
+
+			val quality: Int? = call.getInt("quality", 100);
+
             CoroutineScope(Dispatchers.Main).launch {
-                map.takeSnapshot { snapshot, error ->
+				if (quality != null) {
+					map.takeSnapshot(formatInt, quality) { snapshot, error ->
 
-                    if(error !== null) {
-                        handleError(call, error)
-                    }
+						if (error !== null) {
+							handleError(call, error)
+						}
 
-                    if(snapshot.isNotEmpty()) {
-                        val data = JSObject().put("snapshot", snapshot)
-                        call.resolve(data)
-                    }
-                }
+						if (snapshot.isNotEmpty()) {
+							val data = JSObject().put("snapshot", snapshot)
+							call.resolve(data)
+						}
+					}
+				}
             }
         } catch (e: GoogleMapsError) {
             handleError(call, e)

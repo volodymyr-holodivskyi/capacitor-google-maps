@@ -1,8 +1,8 @@
 package com.capacitorjs.plugins.googlemaps
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.graphics.*
+import android.graphics.Bitmap.CompressFormat
 import android.location.Location
 import android.util.Base64
 import android.util.Log
@@ -21,8 +21,6 @@ import com.google.maps.android.clustering.ClusterManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import java.io.ByteArrayOutputStream
-import java.io.InputStream
-import java.net.URL
 
 
 class CapacitorGoogleMap(
@@ -141,11 +139,11 @@ class CapacitorGoogleMap(
         CoroutineScope(Dispatchers.Main).launch {
             val offsetViewBounds = getMapBounds()
 
-            val relativeTop = offsetViewBounds.top
-            val relativeLeft = offsetViewBounds.left
+            val relativeTop = offsetViewBounds.top;
+            val relativeLeft = offsetViewBounds.left;
 
-            event.setLocation(event.x - relativeLeft, event.y - relativeTop)
-            mapView.dispatchTouchEvent(event)
+			event.setLocation(event.x - relativeLeft, event.y - relativeTop)
+			mapView.dispatchTouchEvent(event)
         }
     }
 
@@ -371,7 +369,8 @@ class CapacitorGoogleMap(
 
                 // add existing markers to the cluster
                 if (markers.isNotEmpty()) {
-                    for ((_, marker) in markers) {
+                    val copyMap = HashMap(markers);
+                    for ((_, marker) in copyMap) {
                         marker.googleMapMarker?.remove()
                         // marker.googleMapMarker = null
                     }
@@ -400,7 +399,8 @@ class CapacitorGoogleMap(
 
                 // add existing markers back to the map
                 if (markers.isNotEmpty()) {
-                    for ((_, marker) in markers) {
+                    val copyMap = HashMap(markers);
+                    for ((_, marker) in copyMap) {
                         val markerOptions: Deferred<MarkerOptions> =
                             CoroutineScope(Dispatchers.IO).async {
                                 this@CapacitorGoogleMap.buildMarker(marker)
@@ -529,14 +529,65 @@ class CapacitorGoogleMap(
         }
     }
 
-    fun takeSnapshot(callback: (result: String, error: GoogleMapsError?) -> Unit) {
+    fun updateMarker(id: String, marker: CapacitorGoogleMapMarker, callback: (result: Result<String>) -> Unit) {
+        try {
+            googleMap ?: throw GoogleMapNotAvailable()
+
+            this.removeMarker(id) { err ->
+                if (err != null) {
+                    throw err
+                }
+
+                this.addMarker(marker, callback);
+            }
+
+        } catch (e: GoogleMapsError) {
+        }
+    }
+
+    fun updateMarkerIcon(id: String, iconId: String, iconUrl: String) {
+        try {
+            googleMap ?: throw GoogleMapNotAvailable()
+
+            val marker = markers[id]
+            marker ?: throw MarkerNotFoundError()
+
+            if (!iconId.isNullOrEmpty()) {
+                if (this.markerIcons.contains(iconId)) {
+                    val cachedBitmap = this.markerIcons[iconId]
+                    marker.googleMapMarker?.setIcon(cachedBitmap?.let { getResizedIcon(it, marker) })
+                } else {
+                    val base64Data = iconUrl!!.substringAfter("base64,", "")
+
+                    // Check if Data URL has a valid base64 part
+                    if (base64Data.isNotEmpty()) {
+                        // Decode the Base64 string into a Bitmap
+                        val decodedString = Base64.decode(base64Data, Base64.DEFAULT)
+                        val bitmap =
+                            BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
+
+                        marker.googleMapMarker?.setIcon(getResizedIcon(bitmap, marker))
+
+                        this.markerIcons[iconId] = bitmap
+                    }
+                }
+            }
+        } catch (e: GoogleMapsError) {
+        }
+    }
+
+    fun takeSnapshot(
+		format: CompressFormat,
+		quality: Int,
+		callback: (result: String, error: GoogleMapsError?) -> Unit
+	) {
         try {
             googleMap ?: throw GoogleMapNotAvailable()
 
             googleMap!!.snapshot { bitmap ->
                 try {
                     if (bitmap !== null) {
-                        val base64Image = bitmapToBase64(bitmap)
+                        val base64Image = bitmapToBase64(bitmap, format, quality)
                         callback(base64Image, null)
                     }
                 } catch (e: GoogleMapsError) {
@@ -550,9 +601,9 @@ class CapacitorGoogleMap(
 
     }
 
-    private fun bitmapToBase64(bitmap: Bitmap): String {
+    private fun bitmapToBase64(bitmap: Bitmap, format: Bitmap.CompressFormat = Bitmap.CompressFormat.PNG, quality: Int = 100): String {
         val outputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+        bitmap.compress(format, quality, outputStream)
         val byteArray = outputStream.toByteArray()
         return Base64.encodeToString(byteArray, Base64.NO_WRAP)
     }
